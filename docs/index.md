@@ -1,98 +1,98 @@
 ---
-title: Handleiding
+title: Manual
 ---
 
-# Handleiding MA3 Remote PWA
+# MA3 Remote PWA manual
 
-Stap voor stap om de app werkend te krijgen. Loopt het mis, ga dan naar [Problemen oplossen](#problemen-oplossen).
+Step by step instructions to get the app working. If something goes wrong, see [Troubleshooting](#troubleshooting).
 
-## 1. Wat heb je nodig
+## 1. What you need
 
-- Een computer waarop de app draait (Windows, macOS of Linux). Dit hoeft niet de MA3-computer te zijn.
-- Een iPad, telefoon of andere browser op **hetzelfde netwerk** als die computer.
-- Een grandMA3 die bereikbaar is op dat netwerk.
+- A computer that runs the app (Windows, macOS or Linux). This does not have to be the MA3 computer.
+- An iPad, phone or other browser on the **same network** as that computer.
+- A grandMA3 that is reachable on that network.
 
-> **MA3 onPC:** in onze tests verwerkte MA3 onPC de commando's pas nadat er een fysieke MA3-console of -hardware aan gekoppeld was. Zonder hardware kwamen de commando's wel binnen in het OSC-protokol, maar deed de MA niets. Test dus eerst met echte hardware.
+> **MA3 onPC:** in our tests, MA3 onPC only processed the commands after physical MA3 console hardware was connected. Without hardware the commands showed up in the OSC protocol, but the MA did nothing. So test with real hardware first.
 
-## 2. De app starten
+## 2. Start the app
 
-1. Download de juiste versie bij [Releases](https://github.com/jannickvang/ma3-remote/releases/latest).
-2. Pak het bestand uit en start het programma.
-3. **Windows:** bij "Windows heeft uw pc beveiligd" kies je *Meer info* en dan *Toch uitvoeren*. Bij de firewallvraag kies je **Toegang toestaan** (privénetwerk). Zonder dit bereikt de iPad de app niet.
-4. **macOS:** rechtsklik op het bestand, kies *Open* en bevestig. Zet het eventueel eerst uitvoerbaar met `chmod +x <bestand>`.
-5. Er opent een venster met een adres, bijvoorbeeld `Open op je iPad: http://192.168.1.20:3000`. Laat dit venster open. Sluit je het, dan stopt de app.
+1. Download the right version from [Releases](https://github.com/jannickvang/ma3-remote/releases/latest).
+2. Unpack the file and start the program.
+3. **Windows:** at "Windows protected your PC" choose *More info* and then *Run anyway*. At the firewall prompt choose **Allow access** (private network). Without this the iPad cannot reach the app.
+4. **macOS:** right-click the file, choose *Open* and confirm. If needed, make it executable first with `chmod +x <file>`.
+5. A window opens with an address, for example `Open on your iPad: http://192.168.1.20:3000`. Keep this window open. If you close it, the app stops.
 
-Open dat adres op de iPad in Safari. Zet de app eventueel op het beginscherm: Deel-knop, dan *Zet op beginscherm*.
+Open that address on the iPad in Safari. Optionally add the app to the home screen: Share button, then *Add to Home Screen*.
 
-## 3. Verbinding met de MA3 instellen
+## 3. Connect to the MA3
 
-### In de MA3
+### In the MA3
 
-1. Ga naar **Setup > In & Out > OSC**.
-2. Zet bovenaan **Enable Input** aan.
-3. Maak een regel (bijv. regel 3) met:
-   - **Destination IP / Remote IP:** het IP-adres van de computer waarop de app draait.
-   - **Port:** een vrije poort, bijvoorbeeld `8000`. Onthoud die.
+1. Go to **Setup > In & Out > OSC**.
+2. Turn on **Enable Input** at the top.
+3. Create a line (e.g. line 3) with:
+   - **Destination IP / Remote IP:** the IP address of the computer running the app.
+   - **Port:** a free port, for example `8000`. Remember it.
    - **Receive Command:** `Yes`.
-4. Zet de **readout op Percent** (anders is een stap van `1` veel groter dan 1%).
+4. Set the **readout to Percent** (otherwise a step of `1` is much larger than 1%).
 
-### In de app
+### In the app
 
-1. Tik rechtsboven op het **statuslabel**.
-2. Vul het **IP-adres van de MA3** en dezelfde **poort** in als op de MA3. Gebruik één en dezelfde poort overal.
-3. Tik op **Opslaan**.
+1. Tap the **status label** at the top right.
+2. Enter the **IP address of the MA3** and the same **port** as on the MA3. Use one and the same port everywhere.
+3. Tap **Save**.
 
-Het IP-adres is standaard `127.0.0.1`. Dat werkt alleen als de MA3 op dezelfde computer draait als de app.
+The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the same computer as the app.
 
-## 4. Controleren dat het werkt
+## 4. Check that it works
 
-- Kijk in de MA3 bij het **OSC-protokol** of de commando's binnenkomen.
-- Draai aan een encoder in de app. In de MA3 moet het attribuut veranderen.
-- Gebeurt er niets terwijl de commando's wel in het protokol staan, kijk dan bij het kopje hardware hierboven.
+- Look in the MA3 **OSC protocol** to see whether commands arrive.
+- Turn an encoder in the app. The attribute should change in the MA3.
+- If nothing happens while the commands do show up in the protocol, see the hardware note above.
 
-## 5. Waar je op moet letten
+## 5. Things to watch out for
 
-| Onderwerp | Wat te doen |
+| Topic | What to do |
 |---|---|
-| **Poort** | Dezelfde poort in de MA3 en in de app. De app stuurt via UDP naar die poort. |
-| **Netwerk** | iPad, computer met de app en MA3 moeten elkaar kunnen bereiken. Gasten- of client-isolatie op de wifi blokkeert dit. |
-| **Firewall** | Sta de app toe op privénetwerken (TCP 3000 voor de iPad, UDP voor de MA3-poort). |
-| **Readout** | Zet op **Percent**, anders zijn de stappen veel te groot. |
-| **Attribuutnamen** | De app gebruikt `Pan`, `Tilt`, `Zoom`, `Focus1`, `Blade 1A` t/m `Blade 4A` en `Blade1 Rot` t/m `Blade4 Rot`. Heten ze bij jouw fixtures anders, pas dan `MA3_ATTRIBUTE_MAP` aan (zie hieronder). |
-| **Update** | De Update-knop stuurt `Update /NoConfirmation` gevolgd door `ClearAll`. Zo hoef je niet te bevestigen op de tafel en is de programmer daarna leeg. |
-| **Set** | De knop stuurt `Set Selection Property 'Active'`. Dit is bedoeld om na Next/Previous weer de hele groep te selecteren. |
-| **Sequences** | Cues & Seq gebruikt standaard start-sequence 201. Een andere waarde wordt per apparaat onthouden. |
-| **Kleurpresets** | Het ophalen van presets van de tafel is nog **experimenteel en niet getest**. Rekenen op die functie kan nog niet. |
+| **Port** | Use the same port in the MA3 and in the app. The app sends over UDP to that port. |
+| **Network** | iPad, the computer running the app and the MA3 must be able to reach each other. Guest or client isolation on the wifi blocks this. |
+| **Firewall** | Allow the app on private networks (TCP 3000 for the iPad, UDP for the MA3 port). |
+| **Readout** | Set to **Percent**, otherwise the steps are far too large. |
+| **Attribute names** | The app uses `Pan`, `Tilt`, `Zoom`, `Focus1`, `Blade 1A` to `Blade 4A` and `Blade1 Rot` to `Blade4 Rot`. If your fixtures use other names, adjust `MA3_ATTRIBUTE_MAP` (see below). |
+| **Update** | The Update button sends `Update /NoConfirmation` followed by `ClearAll`. This way you don't have to confirm on the console and the programmer is empty afterwards. |
+| **Set** | The button sends `Set Selection Property 'Active'`. It is meant to select the whole group again after Next/Previous. |
+| **Sequences** | Cues & Seq uses start sequence 201 by default. Another value is remembered per device. |
+| **Colour presets** | Fetching presets from the console is still **experimental and untested**. Don't rely on it yet. |
 
-## 6. Aanpassen
+## 6. Customize
 
-- **Onderste knoppenbalk:** de knoppen zijn instelbaar in de app (volgorde, zichtbaarheid, commando). Standaard: Highlight, Next, Previous, Set, Full, Clear, Esc.
-- **Attribuutnamen overschrijven:** zet de omgevingsvariabele `MA3_ATTRIBUTE_MAP` met JSON, bijvoorbeeld `{"Focus":"Focus1"}`.
-- **Poort van de app zelf:** standaard 3000. Wijzig met de omgevingsvariabele `PORT`.
-- **Instellingen:** de MA3-instellingen staan in `ma3-remote-config.json` naast het programma.
+- **Bottom button bar:** the buttons are configurable in the app (order, visibility, command). Default: Highlight, Next, Previous, Set, Full, Clear, Esc.
+- **Override attribute names:** set the environment variable `MA3_ATTRIBUTE_MAP` with JSON, for example `{"Focus":"Focus1"}`.
+- **Port of the app itself:** 3000 by default. Change it with the environment variable `PORT`.
+- **Settings:** the MA3 settings are stored in `ma3-remote-config.json` next to the program.
 
-## Problemen oplossen
+## Troubleshooting
 
-**De pagina opent niet op de iPad.**
-Controleer dat iPad en computer op hetzelfde netwerk zitten, dat het adres uit het venster is gebruikt (niet `localhost`) en dat de firewall de app toestaat.
+**The page does not open on the iPad.**
+Check that the iPad and computer are on the same network, that you used the address from the window (not `localhost`), and that the firewall allows the app.
 
-**Status rechtsboven staat op Offline.**
-De iPad bereikt de app niet meer. Controleer of het programma nog draait.
+**The status at the top right says Offline.**
+The iPad no longer reaches the app. Check that the program is still running.
 
-**Commando's komen in het MA3-protokol, maar er gebeurt niets.**
-Controleer *Receive Command = Yes* en *Enable Input*. Test met gekoppelde MA3-hardware (zie boven).
+**Commands appear in the MA3 protocol, but nothing happens.**
+Check *Receive Command = Yes* and *Enable Input*. Test with connected MA3 hardware (see above).
 
-**Commando's komen niet binnen op de MA3.**
-Controleer IP en poort in de app, de poort in de MA3-regel en de firewall van de MA3-computer (UDP).
+**Commands do not arrive at the MA3.**
+Check the IP and port in the app, the port in the MA3 line and the firewall of the MA3 computer (UDP).
 
-**Encoders doen te grote of kleine stappen.**
-Zet de readout op **Percent**.
+**Encoders make steps that are too large or small.**
+Set the readout to **Percent**.
 
-**Een attribuut reageert niet.**
-Controleer de naam van het attribuut in de MA3 en pas `MA3_ATTRIBUTE_MAP` aan.
+**An attribute does not respond.**
+Check the attribute name in the MA3 and adjust `MA3_ATTRIBUTE_MAP`.
 
-**Na een nieuwe versie zie je de oude app.**
-Ververs de pagina hard, of sluit de app volledig op de iPad en open hem opnieuw. De app gebruikt een cache.
+**After a new version you still see the old app.**
+Hard refresh the page, or fully close the app on the iPad and reopen it. The app uses a cache.
 
-**Poort 3000 is bezet.**
-Start met een andere poort, bijvoorbeeld `PORT=3100`.
+**Port 3000 is in use.**
+Start with another port, for example `PORT=3100`.
