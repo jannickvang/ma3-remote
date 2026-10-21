@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>MA3 Remote</title>
@@ -21,9 +21,9 @@
       <button class="nav-btn active" data-page="encoders">Encoders</button>
       <button class="nav-btn" data-page="shapers">Shapers</button>
       <button class="nav-btn" data-page="cues">Cues &amp; Seq</button>
-      <button class="nav-btn" data-page="fixtures">Fixtures &amp; Kleur</button>
+      <button class="nav-btn" data-page="fixtures">Fixtures</button>
     </nav>
-    <button id="conn" class="conn off" title="MA3-verbinding instellen"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
+    <button id="conn" class="conn off" title="Set MA3 connection"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
   </header>
 
   <main id="pages">
@@ -48,15 +48,15 @@
           <h2>Sequences</h2>
           <div class="row">
             <label>Start seq <input type="number" id="seq-start" inputmode="numeric" min="1" value="201"></label>
-            <label>Aantal <input type="number" id="seq-count" inputmode="numeric" min="1" max="200" value="30"></label>
-            <button class="btn" id="seq-build">Toon</button>
+            <label>Count <input type="number" id="seq-count" inputmode="numeric" min="1" max="200" value="30"></label>
+            <button class="btn" id="seq-build">Show</button>
           </div>
           <div class="seq-overview" id="seq-overview"></div>
         </div>
         <div class="panel">
-          <h2>Cue acties <span class="sub" id="sel-label"></span></h2>
+          <h2>Cue actions <span class="sub" id="sel-label"></span></h2>
           <div class="row">
-            <label>Cue nr <input type="number" id="cue-number" inputmode="decimal" min="1" value="1"></label>
+            <label>Cue no. <input type="number" id="cue-number" inputmode="decimal" min="1" value="1"></label>
             <button class="btn accent" id="edit-cue1">Edit Cue 1</button>
           </div>
           <div class="row">
@@ -73,31 +73,21 @@
       </div>
     </section>
 
-    <!-- FIXTURES & KLEUR -->
+    <!-- FIXTURES -->
     <section class="page" id="page-fixtures">
       <div class="fix-layout">
         <div class="panel">
-          <h2>Selectie</h2>
+          <h2>Selection</h2>
           <div class="segmented" id="sel-mode">
             <button class="seg active" data-mode="fixture">Fixture</button>
-            <button class="seg" data-mode="group">Groep</button>
+            <button class="seg" data-mode="group">Group</button>
           </div>
-          <input type="text" id="sel-input" inputmode="decimal" autocomplete="off" placeholder="bv. 1 thru 8 + 12">
+          <input type="text" id="sel-input" inputmode="decimal" autocomplete="off" placeholder="e.g. 1 thru 8 + 12">
           <div class="keypad" id="keypad"></div>
           <div class="row">
-            <button class="btn accent" id="sel-apply">Selecteer</button>
-            <button class="btn" id="sel-clear">Wis veld</button>
+            <button class="btn accent" id="sel-apply">Select</button>
+            <button class="btn" id="sel-clear">Clear field</button>
           </div>
-        </div>
-        <div class="panel grow">
-          <h2>Kleurpresets <span class="sub" id="preset-status"></span></h2>
-          <div class="row">
-            <label>Start preset <input type="number" id="pre-start" inputmode="numeric" min="1" value="1"></label>
-            <label>Aantal <input type="number" id="pre-count" inputmode="numeric" min="1" max="200" value="32"></label>
-            <label>OSC-regel (SendOSC) <input type="number" id="pre-osc" inputmode="numeric" min="1" max="99" value="3"></label>
-            <button class="btn accent" id="pre-fetch">Ophalen</button>
-          </div>
-          <div class="color-grid" id="color-grid"></div>
         </div>
       </div>
     </section>
@@ -105,35 +95,35 @@
 
   <footer id="bottombar">
     <div id="bar-buttons"></div>
-    <button id="bar-config" class="bar-btn cfg" aria-label="Balk aanpassen">⚙</button>
+    <button id="bar-config" class="bar-btn cfg" aria-label="Customize bar">⚙</button>
   </footer>
 
   <dialog id="config-dialog">
-    <h2>Knoppenbalk aanpassen</h2>
+    <h2>Customize button bar</h2>
     <ul id="config-list"></ul>
     <div class="row">
       <input type="text" id="custom-label" placeholder="Label" maxlength="12">
-      <input type="text" id="custom-cmd" placeholder="MA3 commando, bv. Go+ Sequence 1" maxlength="150">
-      <button class="btn" id="custom-add">Toevoegen</button>
+      <input type="text" id="custom-cmd" placeholder="MA3 command, e.g. Go+ Sequence 1" maxlength="150">
+      <button class="btn" id="custom-add">Add</button>
     </div>
     <div class="row end">
-      <button class="btn" id="config-reset">Standaard</button>
-      <button class="btn accent" id="config-close">Klaar</button>
+      <button class="btn" id="config-reset">Default</button>
+      <button class="btn accent" id="config-close">Done</button>
     </div>
   </dialog>
 
   <dialog id="ma3-dialog">
-    <h2>MA3 verbinding</h2>
+    <h2>MA3 connection</h2>
     <p id="ma3-state" class="hint"></p>
     <div class="row">
-      <label>IP-adres / hostnaam <input type="text" id="ma3-ip" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="127.0.0.1"></label>
-      <label>Poort <input type="number" id="ma3-port" inputmode="numeric" min="1" max="65535" value="8000"></label>
+      <label>IP address / hostname <input type="text" id="ma3-ip" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="127.0.0.1"></label>
+      <label>Port <input type="number" id="ma3-port" inputmode="numeric" min="1" max="65535" value="8000"></label>
     </div>
     <p id="ma3-error" class="error"></p>
     <div class="row end">
-      <button class="btn" id="ma3-local">Deze computer</button>
-      <button class="btn" id="ma3-cancel">Annuleer</button>
-      <button class="btn accent" id="ma3-save">Opslaan &amp; verbinden</button>
+      <button class="btn" id="ma3-local">This computer</button>
+      <button class="btn" id="ma3-cancel">Cancel</button>
+      <button class="btn accent" id="ma3-save">Save &amp; connect</button>
     </div>
   </dialog>
 

@@ -62,7 +62,6 @@ The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the s
 | **Update** | The Update button sends `Update /NoConfirmation` followed by `ClearAll`. This way you don't have to confirm on the console and the programmer is empty afterwards. |
 | **Set** | The button sends `Set Selection Property 'Active'`. It is meant to select the whole group again after Next/Previous. |
 | **Sequences** | Cues & Seq uses start sequence 201 by default. Another value is remembered per device. |
-| **Colour presets** | Fetching presets from the console is still **experimental and untested**. Don't rely on it yet. |
 
 ## 6. Customize
 

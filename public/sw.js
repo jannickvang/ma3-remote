@@ -1,4 +1,4 @@
-const CACHE = 'ma3-remote-v18';
+const CACHE = 'ma3-remote-v19';
 const ASSETS = ['/', '/index.html', '/manifest.json', '/icon.svg', '/css/style.css', '/js/app.js', '/js/encoders.js'];
 
 self.addEventListener('install', (e) => {
@@ -14,7 +14,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Network-first met cache als terugval, zodat updates direct zichtbaar zijn.
+// Network-first with cache fallback, so updates are visible immediately.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin || req.url.includes('/api/')) return;

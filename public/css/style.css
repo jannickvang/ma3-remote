@@ -208,16 +208,6 @@ input:focus { border-color: var(--accent); }
 .fix-layout > .panel:first-child { width: 340px; flex: 0 0 340px; }
 .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .keypad button { min-height: 52px; font-size: 18px; padding: 0; }
-.color-grid {
-  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; align-content: start;
-}
-.swatch {
-  min-height: 74px; padding: 6px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
-  border: 2px solid rgba(255,255,255,.08); text-shadow: 0 1px 2px rgba(0,0,0,.8); font-weight: 700; text-align: left;
-}
-.swatch small { font-weight: 400; opacity: .9; }
-.swatch.selected { border-color: #fff; }
 
 /* ---------- Bottom bar ---------- */
 #bottombar {
@@ -265,5 +255,3 @@ dialog .row input[type="text"] { flex: 1; width: auto; min-width: 100px; }
   .nav-btn { font-size: 12px; }
   .bar-btn { min-width: 64px; }
 }
-.swatch { background: #1b1b21; color: var(--text); }
-.swatch.missing { opacity: .3; }

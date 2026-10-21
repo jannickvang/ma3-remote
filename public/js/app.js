@@ -18,13 +18,13 @@
   }
 
   function describeState() {
-    if (ma3State.mode === 'simulation') return 'Simulatiemodus (geen MA3-adres ingesteld)';
-    return 'Commando’s via OSC (UDP) naar ' + ma3State.ip + ':' + ma3State.port + '. Er is geen terugkoppeling, dus de verbinding kan niet worden gecontroleerd.';
+    if (ma3State.mode === 'simulation') return 'Simulation mode (no MA3 address set)';
+    return 'Commands are sent via OSC (UDP) to ' + ma3State.ip + ':' + ma3State.port + '. There is no feedback, so the connection cannot be verified.';
   }
 
   function renderStatus() {
     document.getElementById('ma3-state').textContent = describeState();
-    if (ma3State.mode === 'simulation') setConn('sim', 'Simulatie');
+    if (ma3State.mode === 'simulation') setConn('sim', 'Simulation');
     else setConn('on', ma3State.ip + ':' + ma3State.port);
   }
 
@@ -43,7 +43,6 @@
         document.getElementById('ma3-error').textContent = msg.error;
         return;
       }
-      if (msg.type === 'presets' && window.ma3OnPresets) { window.ma3OnPresets(msg); return; }
       if (msg.type !== 'status') return;
       ma3State = msg;
       if (ma3Dialog.open && ma3Waiting) { ma3Waiting = false; ma3Dialog.close(); }
@@ -60,7 +59,7 @@
   function send(obj) {
     var data = JSON.stringify(obj);
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(data);
-    else if (obj.type === 'cmd' && queue.length < 20) queue.push(data); // encoders niet bufferen
+    else if (obj.type === 'cmd' && queue.length < 20) queue.push(data); // do not buffer encoder events
   }
   function cmd(text) { send({ type: 'cmd', cmd: text }); }
 
@@ -87,11 +86,11 @@
     var ip = ipInput.value.trim();
     var port = parseInt(portInput.value, 10);
     if (!/^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$/.test(ip) || !(port >= 1 && port <= 65535)) {
-      errEl.textContent = 'Ongeldig IP-adres of poort';
+      errEl.textContent = 'Invalid IP address or port';
       return;
     }
     errEl.textContent = '';
-    if (!ws || ws.readyState !== WebSocket.OPEN) { errEl.textContent = 'Geen verbinding met de server'; return; }
+    if (!ws || ws.readyState !== WebSocket.OPEN) { errEl.textContent = 'No connection to the server'; return; }
     ma3Waiting = true;
     send({ type: 'setConfig', ip: ip, port: port });
   });
@@ -107,7 +106,7 @@
   navBtns.forEach(function (b) { b.addEventListener('click', function () { showPage(b.dataset.page); }); });
   try { var saved = localStorage.getItem('ma3.page'); if (saved) showPage(saved); } catch (e) {}
 
-  ['bar-buttons', 'seq-overview', 'color-grid', 'config-list'].forEach(function (id) {
+  ['bar-buttons', 'seq-overview', 'config-list'].forEach(function (id) {
     document.getElementById(id).classList.add('scrollable');
   });
 
@@ -126,8 +125,8 @@
     box.innerHTML = '<h3>Blade ' + i + '</h3><div class="pair"></div>';
     var pair = box.querySelector('.pair');
     grid.appendChild(box);
-    new Wheel(pair, { attr: 'Blade' + i, label: 'Insteek', pxPerStep: 7, stepSize: 0.05, accel: true });
-    new Wheel(pair, { attr: 'Blade' + i + 'Rot', label: 'Rotatie', pxPerStep: 7, stepSize: 0.05, accel: true });
+    new Wheel(pair, { attr: 'Blade' + i, label: 'Insert', pxPerStep: 7, stepSize: 0.05, accel: true });
+    new Wheel(pair, { attr: 'Blade' + i + 'Rot', label: 'Rotation', pxPerStep: 7, stepSize: 0.05, accel: true });
   }
 
 
@@ -214,7 +213,7 @@
   });
   buildOverview();
 
-  /* ================= Fixtures & Kleur ================= */
+  /* ================= Fixtures ================= */
   var selMode = 'fixture';
   var selInput = document.getElementById('sel-input');
   var selBtns = document.querySelectorAll('#sel-mode .seg');
@@ -222,7 +221,7 @@
     b.addEventListener('click', function () {
       selMode = b.dataset.mode;
       selBtns.forEach(function (x) { x.classList.toggle('active', x === b); });
-      selInput.placeholder = selMode === 'group' ? 'bv. 3 of 1 thru 4' : 'bv. 1 thru 8 + 12';
+      selInput.placeholder = selMode === 'group' ? 'e.g. 3 or 1 thru 4' : 'e.g. 1 thru 8 + 12';
     });
   });
 
@@ -249,64 +248,7 @@
     selInput.value = '';
   });
 
-  var colorGrid = document.getElementById('color-grid');
-  var preStart = document.getElementById('pre-start');
-  var preCount = document.getElementById('pre-count');
-  var preOsc = document.getElementById('pre-osc');
-  var preStatus = document.getElementById('preset-status');
-  var PRE_POOL = 4;
-
-  ['start', 'count', 'osc'].forEach(function (k) {
-    var el = document.getElementById('pre-' + k);
-    var v = localStorage.getItem('ma3.pre.' + k);
-    if (v) el.value = v;
-    el.addEventListener('change', function () { localStorage.setItem('ma3.pre.' + k, el.value); });
-  });
-
-  function renderPresets(msg) {
-    colorGrid.innerHTML = '';
-    var have = {};
-    msg.items.forEach(function (i) { have[i.no] = i.name; });
-    for (var n = msg.start; n <= msg.end; n++) {
-      (function (n) {
-        var exists = Object.prototype.hasOwnProperty.call(have, n);
-        var b = document.createElement('button');
-        b.className = 'swatch' + (exists ? '' : ' missing');
-        b.disabled = !exists;
-        var num = document.createElement('span');
-        num.textContent = PRE_POOL + '.' + n;
-        var name = document.createElement('small');
-        name.textContent = exists ? (have[n] || '(geen naam)') : 'leeg';
-        b.appendChild(num);
-        b.appendChild(name);
-        b.addEventListener('click', function () {
-          colorGrid.querySelectorAll('.swatch.selected').forEach(function (s) { s.classList.remove('selected'); });
-          b.classList.add('selected');
-          cmd('Preset ' + PRE_POOL + '.' + n);
-        });
-        colorGrid.appendChild(b);
-      })(n);
-    }
-  }
-
-  window.ma3OnPresets = function (msg) {
-    document.getElementById('pre-fetch').disabled = false;
-    if (!msg.ok) { preStatus.textContent = msg.error; return; }
-    preStatus.textContent = msg.items.length + ' gevonden';
-    renderPresets(msg);
-  };
-
-  document.getElementById('pre-fetch').addEventListener('click', function () {
-    var btn = document.getElementById('pre-fetch');
-    btn.disabled = true;
-    preStatus.textContent = 'Ophalen...';
-    send({
-      type: 'fetchPresets', pool: PRE_POOL,
-      start: intVal(preStart, 1, 1, 9999), count: intVal(preCount, 32, 1, 200), oscId: intVal(preOsc, 3, 1, 99)
-    });
-  });
-
-  /* ================= Onderste knoppenbalk ================= */
+  /* ================= Bottom button bar ================= */
   var DEFAULT_BUTTONS = [
     { id: 'highlight', label: 'Highlight', cmd: 'Highlight', visible: true },
     { id: 'next', label: 'Next', cmd: 'Next', visible: true },

@@ -1,7 +1,7 @@
-/* Virtuele encoder-wielen met touch-events (touchstart/touchmove/touchend).
- * Elk wiel verzamelt vingerbeweging in pixels en zet die om in hele stappen
- * (pxPerStep pixels = 1 stap). Stappen worden gebundeld (25 ms) en verstuurd via
- * de sender die app.js instelt. Muis-fallback voor desktop is ingebouwd. */
+/* Virtual encoder wheels using touch events (touchstart/touchmove/touchend).
+ * Each wheel collects finger movement in pixels and converts it to whole steps
+ * (pxPerStep pixels = 1 step). Steps are batched (25 ms) and sent through the
+ * sender configured by app.js. A mouse fallback for desktop is built in. */
 (function () {
   'use strict';
 
@@ -19,7 +19,7 @@
     this.pxPerStep = opts.pxPerStep || 7;   // pixels per stap
     this.stepSize = opts.stepSize || 1;      // % per stap
     this.invert = !!opts.invert;
-    // Versnelling: sneller slepen = grotere stappen (alleen als accel is ingeschakeld)
+    // Acceleration: dragging faster = larger steps (only when accel is enabled)
     this.accel = !!opts.accel;
     this.accelStart = opts.accelStart || 0.6;  // px/ms waarboven versnelling begint
     this.accelGain = opts.accelGain || 4;      // extra vermenigvuldiger per px/ms
@@ -123,7 +123,7 @@
       var now = performance.now();
       var dt = Math.max(now - this.lastT, 1);
       this.lastT = now;
-      // Gladgestreken snelheid, zodat één snelle touch-event niet direct uitschiet
+      // Smoothed velocity, so a single fast touch event does not overshoot
       this.speed = this.speed * 0.6 + (Math.abs(dy) / dt) * 0.4;
       if (this.speed > this.accelStart) {
         factor = Math.min(this.accelMax, 1 + (this.speed - this.accelStart) * this.accelGain);
