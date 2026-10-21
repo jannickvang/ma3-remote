@@ -14,6 +14,8 @@ Touch-remote (PWA) voor een grandMA3-console, geoptimaliseerd voor iPad. Encoder
 
 Windows en macOS waarschuwen bij niet-ondertekende programma's: kies "Toch uitvoeren" (macOS: rechtsklik, "Open"). Sta bij de eerste start de firewall-toegang toe.
 
+> Uitgebreide stappen en probleemoplossing: zie de [handleiding](HANDLEIDING.md).
+
 ## MA3 instellen
 
 Setup > In & Out > OSC: maak een regel met dezelfde poort als in de app, zet **Receive Command** op Yes en schakel "Enable Input" in. Zet de readout op **percent**.
