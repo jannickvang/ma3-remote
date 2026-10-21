@@ -1,0 +1,25 @@
+services:
+  ma3-remote:
+    build: .
+    container_name: ma3-remote-pwa
+    ports:
+      - "3000:3000"
+      - "${MA3_PORT:-8000}:${MA3_PORT:-8000}/udp"
+    environment:
+      # Standaard MA3-adres; in de PWA aan te passen (tandwiel/status linksboven).
+      # In Docker is 127.0.0.1 de container zelf: gebruik host.docker.internal voor een
+      # console op dezelfde computer.
+      MA3_IP: "${MA3_IP:-host.docker.internal}"
+      # OSC-poort van de MA3 (UDP, standaard 8000)
+      MA3_PORT: "${MA3_PORT:-8000}"
+      # Optioneel: JSON om attribuutnamen te overschrijven, bv. '{"Frost":"Frost1"}'
+      MA3_ATTRIBUTE_MAP: "${MA3_ATTRIBUTE_MAP:-}"
+      CONFIG_PATH: /data/config.json
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ma3-data:/data
+    restart: unless-stopped
+
+volumes:
+  ma3-data:

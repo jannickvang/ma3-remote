@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>MA3 Remote</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MA3 Remote">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header id="topbar">
+    <nav id="nav">
+      <button class="nav-btn active" data-page="encoders">Encoders</button>
+      <button class="nav-btn" data-page="shapers">Shapers</button>
+      <button class="nav-btn" data-page="cues">Cues &amp; Seq</button>
+      <button class="nav-btn" data-page="fixtures">Fixtures &amp; Kleur</button>
+    </nav>
+    <button id="conn" class="conn off" title="MA3-verbinding instellen"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
+  </header>
+
+  <main id="pages">
+    <!-- ENCODERS -->
+    <section class="page active" id="page-encoders">
+      <div class="enc-layout">
+        <div class="enc-side" id="wheel-pan"></div>
+        <div class="enc-middle" id="wheels-middle"></div>
+        <div class="enc-side" id="wheel-tilt"></div>
+      </div>
+    </section>
+
+    <!-- SHAPERS -->
+    <section class="page" id="page-shapers">
+      <div class="shaper-grid" id="shaper-grid"></div>
+    </section>
+
+    <!-- CUES & SEQ -->
+    <section class="page" id="page-cues">
+      <div class="cues-layout">
+        <div class="panel">
+          <h2>Sequences</h2>
+          <div class="row">
+            <label>Start seq <input type="number" id="seq-start" inputmode="numeric" min="1" value="201"></label>
+            <label>Aantal <input type="number" id="seq-count" inputmode="numeric" min="1" max="200" value="30"></label>
+            <button class="btn" id="seq-build">Toon</button>
+          </div>
+          <div class="seq-overview" id="seq-overview"></div>
+        </div>
+        <div class="panel">
+          <h2>Cue acties <span class="sub" id="sel-label"></span></h2>
+          <div class="row">
+            <label>Cue nr <input type="number" id="cue-number" inputmode="decimal" min="1" value="1"></label>
+            <button class="btn accent" id="edit-cue1">Edit Cue 1</button>
+          </div>
+          <div class="row">
+            <div class="segmented" id="store-mode">
+              <button class="seg active" data-mode="merge">Merge</button>
+              <button class="seg" data-mode="overwrite">Overwrite</button>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn big" id="store-cue">Store Cue</button>
+            <button class="btn big accent" id="update-btn">Update</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIXTURES & KLEUR -->
+    <section class="page" id="page-fixtures">
+      <div class="fix-layout">
+        <div class="panel">
+          <h2>Selectie</h2>
+          <div class="segmented" id="sel-mode">
+            <button class="seg active" data-mode="fixture">Fixture</button>
+            <button class="seg" data-mode="group">Groep</button>
+          </div>
+          <input type="text" id="sel-input" inputmode="decimal" autocomplete="off" placeholder="bv. 1 thru 8 + 12">
+          <div class="keypad" id="keypad"></div>
+          <div class="row">
+            <button class="btn accent" id="sel-apply">Selecteer</button>
+            <button class="btn" id="sel-clear">Wis veld</button>
+          </div>
+        </div>
+        <div class="panel grow">
+          <h2>Kleurpresets <span class="sub" id="preset-status"></span></h2>
+          <div class="row">
+            <label>Start preset <input type="number" id="pre-start" inputmode="numeric" min="1" value="1"></label>
+            <label>Aantal <input type="number" id="pre-count" inputmode="numeric" min="1" max="200" value="32"></label>
+            <label>OSC-regel (SendOSC) <input type="number" id="pre-osc" inputmode="numeric" min="1" max="99" value="3"></label>
+            <button class="btn accent" id="pre-fetch">Ophalen</button>
+          </div>
+          <div class="color-grid" id="color-grid"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="bottombar">
+    <div id="bar-buttons"></div>
+    <button id="bar-config" class="bar-btn cfg" aria-label="Balk aanpassen">⚙</button>
+  </footer>
+
+  <dialog id="config-dialog">
+    <h2>Knoppenbalk aanpassen</h2>
+    <ul id="config-list"></ul>
+    <div class="row">
+      <input type="text" id="custom-label" placeholder="Label" maxlength="12">
+      <input type="text" id="custom-cmd" placeholder="MA3 commando, bv. Go+ Sequence 1" maxlength="150">
+      <button class="btn" id="custom-add">Toevoegen</button>
+    </div>
+    <div class="row end">
+      <button class="btn" id="config-reset">Standaard</button>
+      <button class="btn accent" id="config-close">Klaar</button>
+    </div>
+  </dialog>
+
+  <dialog id="ma3-dialog">
+    <h2>MA3 verbinding</h2>
+    <p id="ma3-state" class="hint"></p>
+    <div class="row">
+      <label>IP-adres / hostnaam <input type="text" id="ma3-ip" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="127.0.0.1"></label>
+      <label>Poort <input type="number" id="ma3-port" inputmode="numeric" min="1" max="65535" value="8000"></label>
+    </div>
+    <p id="ma3-error" class="error"></p>
+    <div class="row end">
+      <button class="btn" id="ma3-local">Deze computer</button>
+      <button class="btn" id="ma3-cancel">Annuleer</button>
+      <button class="btn accent" id="ma3-save">Opslaan &amp; verbinden</button>
+    </div>
+  </dialog>
+
+  <script src="/js/encoders.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
