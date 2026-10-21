@@ -14,7 +14,7 @@ Touch-remote (PWA) voor een grandMA3-console, geoptimaliseerd voor iPad. Encoder
 
 Windows en macOS waarschuwen bij niet-ondertekende programma's: kies "Toch uitvoeren" (macOS: rechtsklik, "Open"). Sta bij de eerste start de firewall-toegang toe.
 
-> Uitgebreide stappen en probleemoplossing: zie de [handleiding](HANDLEIDING.md).
+> Uitgebreide stappen en probleemoplossing: zie de [handleiding](https://jannickvang.github.io/ma3-remote/).
 
 ## MA3 instellen
 
@@ -27,7 +27,7 @@ npm install
 npm start            # http://localhost:3000
 ```
 
-Docker: `docker compose up --build`. Omgevingsvariabelen: `PORT`, `MA3_IP`, `MA3_PORT`, `CONFIG_PATH`, `MA3_ATTRIBUTE_MAP`.
+Omgevingsvariabelen: `PORT`, `MA3_IP`, `MA3_PORT`, `CONFIG_PATH`, `MA3_ATTRIBUTE_MAP`.
 
 ## Zelf bouwen (.exe / binaries)
 

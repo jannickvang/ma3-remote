@@ -1,3 +1,7 @@
+---
+title: Handleiding
+---
+
 # Handleiding MA3 Remote PWA
 
 Stap voor stap om de app werkend te krijgen. Loopt het mis, ga dan naar [Problemen oplossen](#problemen-oplossen).
@@ -12,7 +16,7 @@ Stap voor stap om de app werkend te krijgen. Loopt het mis, ga dan naar [Problem
 
 ## 2. De app starten
 
-1. Download de juiste versie bij [Releases](../../releases/latest).
+1. Download de juiste versie bij [Releases](https://github.com/jannickvang/ma3-remote/releases/latest).
 2. Pak het bestand uit en start het programma.
 3. **Windows:** bij "Windows heeft uw pc beveiligd" kies je *Meer info* en dan *Toch uitvoeren*. Bij de firewallvraag kies je **Toegang toestaan** (privénetwerk). Zonder dit bereikt de iPad de app niet.
 4. **macOS:** rechtsklik op het bestand, kies *Open* en bevestig. Zet het eventueel eerst uitvoerbaar met `chmod +x <bestand>`.
@@ -38,7 +42,7 @@ Open dat adres op de iPad in Safari. Zet de app eventueel op het beginscherm: De
 2. Vul het **IP-adres van de MA3** en dezelfde **poort** in als op de MA3. Gebruik één en dezelfde poort overal.
 3. Tik op **Opslaan**.
 
-Het IP-adres is standaard `127.0.0.1`. Dat werkt alleen als de MA3 op dezelfde computer draait als de app. Bij Docker gebruik je `host.docker.internal`.
+Het IP-adres is standaard `127.0.0.1`. Dat werkt alleen als de MA3 op dezelfde computer draait als de app.
 
 ## 4. Controleren dat het werkt
 
@@ -65,7 +69,7 @@ Het IP-adres is standaard `127.0.0.1`. Dat werkt alleen als de MA3 op dezelfde c
 - **Onderste knoppenbalk:** de knoppen zijn instelbaar in de app (volgorde, zichtbaarheid, commando). Standaard: Highlight, Next, Previous, Set, Full, Clear, Esc.
 - **Attribuutnamen overschrijven:** zet de omgevingsvariabele `MA3_ATTRIBUTE_MAP` met JSON, bijvoorbeeld `{"Focus":"Focus1"}`.
 - **Poort van de app zelf:** standaard 3000. Wijzig met de omgevingsvariabele `PORT`.
-- **Instellingen:** de MA3-instellingen staan in `ma3-remote-config.json` naast het programma (bij Docker in `/data/config.json`).
+- **Instellingen:** de MA3-instellingen staan in `ma3-remote-config.json` naast het programma.
 
 ## Problemen oplossen
 
@@ -92,11 +96,3 @@ Ververs de pagina hard, of sluit de app volledig op de iPad en open hem opnieuw.
 
 **Poort 3000 is bezet.**
 Start met een andere poort, bijvoorbeeld `PORT=3100`.
-
-## Docker
-
-```
-docker compose up --build
-```
-
-Gebruik `MA3_IP=host.docker.internal` als de MA3 op dezelfde computer draait. De poort van de MA3 komt uit `MA3_PORT`.
