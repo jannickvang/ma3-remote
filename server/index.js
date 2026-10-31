@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const dgram = require('dgram');
+const { execFile } = require('child_process');
 const express = require('express');
 const { WebSocketServer, WebSocket } = require('ws');
 
@@ -151,6 +152,9 @@ class MA3Link {
     this.socket = dgram.createSocket('udp4');
     this.socket.on('error', (err) => this.reportError(err.message));
     this.lastError = null;
+    this.reachable = null;
+    this.lastPingAt = null;
+    this.pingError = null;
     this.configure(cfg, false);
   }
 
@@ -158,12 +162,23 @@ class MA3Link {
     this.ip = cfg.ip;
     this.port = cfg.port;
     this.lastError = null;
+    this.reachable = null;
+    this.lastPingAt = null;
+    this.pingError = null;
     this.mode = cfg.ip ? 'osc' : 'simulation';
     if (notify) this.onStatus();
   }
 
   status() {
-    return { mode: this.mode, target: this.ip || null, ip: this.ip || '', port: this.port };
+    return {
+      mode: this.mode,
+      target: this.ip || null,
+      ip: this.ip || '',
+      port: this.port,
+      reachable: this.reachable,
+      lastPingAt: this.lastPingAt,
+      pingError: this.pingError
+    };
   }
 
   reportError(message) {
@@ -231,6 +246,8 @@ const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 8 * 1024 });
 
 const store = loadConfig();
 const links = new Map();
+const PING_INTERVAL = 15000;
+const PING_TIMEOUT = 3000;
 function defaultClientConfig() {
   return store.legacy && validTarget(store.legacy.ip, store.legacy.port)
     ? store.legacy
@@ -257,6 +274,35 @@ function getClient(clientId, submitted) {
 function getLink(clientId, client) {
   if (!links.has(clientId)) links.set(clientId, new MA3Link({ ip: client.ip, port: client.port }, () => {}));
   return links.get(clientId);
+}
+
+function pingArgs(host) {
+  if (process.platform === 'win32') return ['-n', '1', '-w', String(PING_TIMEOUT), host];
+  if (process.platform === 'darwin') return ['-c', '1', '-W', String(PING_TIMEOUT), host];
+  return ['-c', '1', '-W', String(Math.ceil(PING_TIMEOUT / 1000)), host];
+}
+
+function broadcastClientStatus(clientId) {
+  const link = links.get(clientId);
+  if (!link) return;
+  const payload = JSON.stringify({ type: 'status', ...link.status() });
+  for (const ws of wss.clients) {
+    if (ws.readyState === WebSocket.OPEN && ws.clientId === clientId) ws.send(payload);
+  }
+}
+
+function checkReachability(clientId, client) {
+  const link = getLink(clientId, client);
+  link.lastPingAt = new Date().toISOString();
+  execFile('ping', pingArgs(client.ip), { timeout: PING_TIMEOUT + 500, windowsHide: true }, (error) => {
+    link.reachable = !error;
+    link.pingError = error ? 'Host did not respond to ping' : null;
+    broadcastClientStatus(clientId);
+  });
+}
+
+function checkAllReachability() {
+  for (const [clientId, client] of Object.entries(store.clients)) checkReachability(clientId, client);
 }
 
 app.get('/api/clients', (req, res) => {
@@ -291,6 +337,7 @@ wss.on('connection', (ws, req) => {
         name: ws.client.name,
         settings: ws.client.settings
       }));
+      checkReachability(clientId, ws.client);
       return ws.send(JSON.stringify({ type: 'status', ...link.status() }));
     }
     if (!ws.clientId || !ws.client) return;
@@ -308,6 +355,7 @@ wss.on('connection', (ws, req) => {
       ws.client.settings.port = port;
       getLink(ws.clientId, ws.client).configure(cfg);
       saveConfig(store);
+      checkReachability(ws.clientId, ws.client);
       return ws.send(JSON.stringify({ type: 'status', ...getLink(ws.clientId, ws.client).status() }));
     }
     if (msg.type === 'saveSettings') {
@@ -316,6 +364,7 @@ wss.on('connection', (ws, req) => {
         ws.client.ip = settings.ip;
         ws.client.port = settings.port;
         getLink(ws.clientId, ws.client).configure({ ip: settings.ip, port: settings.port });
+        checkReachability(ws.clientId, ws.client);
       }
       if (msg.settings && msg.settings.name) ws.client.name = safeClientName(msg.settings.name);
       ws.client.settings = { ...ws.client.settings, ...settings };
@@ -357,6 +406,9 @@ setInterval(() => {
     ws.ping();
   }
 }, 15000);
+
+checkAllReachability();
+setInterval(checkAllReachability, PING_INTERVAL);
 
 server.on('error', (err) => {
   console.error(`Server cannot start: ${err.message}`);

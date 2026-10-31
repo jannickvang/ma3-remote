@@ -48,13 +48,20 @@
 
   function describeState() {
     if (ma3State.mode === 'simulation') return 'Simulation mode (no MA3 address set)';
-    return 'Commands are sent via OSC (UDP) to ' + ma3State.ip + ':' + ma3State.port + '. There is no feedback, so the connection cannot be verified.';
+    var ping = ma3State.reachable === true
+      ? 'Network reachable'
+      : ma3State.reachable === false
+        ? 'Not reachable by network ping'
+        : 'Checking network reachability';
+    return 'Commands are sent via OSC (UDP) to ' + ma3State.ip + ':' + ma3State.port + '. ' + ping + '. OSC command processing is not confirmed.';
   }
 
   function renderStatus() {
     document.getElementById('ma3-state').textContent = describeState();
     if (ma3State.mode === 'simulation') setConn('sim', 'Simulation');
-    else setConn('on', ma3State.ip + ':' + ma3State.port);
+    else if (ma3State.reachable === true) setConn('on', ma3State.ip + ':' + ma3State.port);
+    else if (ma3State.reachable === false) setConn('off', 'Unreachable');
+    else setConn('warn', 'Checking');
   }
 
   function connect() {
@@ -150,6 +157,8 @@
     errEl.textContent = '';
     if (!ws || ws.readyState !== WebSocket.OPEN) { errEl.textContent = 'No connection to the server'; return; }
     ma3Waiting = true;
+    ma3State.reachable = null;
+    renderStatus();
     sendSettings({ ip: ip, port: port });
   });
 

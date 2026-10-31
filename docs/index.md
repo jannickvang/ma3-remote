@@ -59,7 +59,7 @@ The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the s
 | **Firewall** | Allow the app on private networks (TCP 3000 for the iPad, UDP for the MA3 port). |
 | **Readout** | Set to **Percent**, otherwise the steps are far too large. |
 | **Attribute names** | The app uses `Pan`, `Tilt`, `Zoom`, `Focus1`, `Blade 1A` to `Blade 4A` and `Blade1 Rot` to `Blade4 Rot`. If your fixtures use other names, adjust `MA3_ATTRIBUTE_MAP` (see below). |
-| **Settings** | The single gear button opens one settings menu for the MA3 connection, frost presets, bottom button bar and client management. |
+| **Settings** | The single gear button opens one settings menu for the MA3 connection, frost presets, bottom button bar and client management. The server periodically pings each configured MA3 host and shows whether it is reachable. |
 | **Update** | The Update button sends `Update /NoConfirmation` followed by `ClearAll`. This way you don't have to confirm on the console and the programmer is empty afterwards. |
 | **Set** | The button sends `Set Selection Property 'Active'`. It is meant to select the whole group again after Next/Previous. |
 | **Sequences** | Cues & Seq uses start sequence 201 by default. Another value is remembered per device. |
@@ -67,6 +67,7 @@ The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the s
 ## 6. Customize
 
 - **Settings and clients:** settings are stored by the server per browser client. The first connection migrates existing frost and bottom-bar settings from the device. The client list in Settings shows known clients and allows removing them.
+- **Reachability:** the status indicator uses a background network ping to check the configured host. It is orange while a newly saved target is being checked, green after a successful ping and red when the host is unreachable. A successful ping only confirms network reachability; it does not confirm that MA3 is listening for or processing OSC commands.
 - **Frost presets:** the four frost buttons recall MA3 presets 5.1 through 5.4 by default. Configure the preset numbers in Settings.
 - **Bottom button bar:** the buttons are configurable in Settings (order, visibility, command). Default: Highlight, Next, Previous, Set, Full, Clear, Esc.
 - **Override attribute names:** set the environment variable `MA3_ATTRIBUTE_MAP` with JSON, for example `{"Focus":"Focus1"}`.
