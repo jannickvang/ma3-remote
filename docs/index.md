@@ -63,17 +63,18 @@ The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the s
 | **Update** | The Update button sends `Update /NoConfirmation` followed by `ClearAll`. This way you don't have to confirm on the console and the programmer is empty afterwards. |
 | **Set** | The button sends `Set Selection Property 'Active'`. It is meant to select the whole group again after Next/Previous. |
 | **Sequences** | Cues & Seq uses start sequence 201 by default. Another value is remembered per device. |
-| **Groups** | The Fixtures page shows the groups of datapool 2 with number and name. Tapping a group selects it in the MA3 (`Group <number>`). |
+| **Groups** | The Fixtures page shows the groups of datapool 2 with number and name. Tapping a group selects its fixtures in the MA3 (`SelectFixtures Datapool 2 Group <number>`). |
 
 ## Groups from the MA3 (plugin)
 
 The Fixtures page loads the groups of datapool 2 from the console. This needs one small plugin in the showfile; the PWA triggers it, so the console only sends data when the page is open.
 
 1. Import [ma3-plugin/MA3RemoteGroups.lua](https://github.com/jannickvang/ma3-remote/blob/main/ma3-plugin/MA3RemoteGroups.lua) into your showfile (or add it to your template showfile once).
-2. In the plugin, set `OSC_LINE` to the number of the OSC line in **Setup > In & Out > OSC** that points at the computer running the app (the same line the app uses to send commands).
-3. Open the Fixtures page. The app sends `Plugin "MA3 Remote Groups"` and shows *Waiting for the MA3…* until the group list arrives. The list refreshes automatically while the page is open.
+2. In **Setup > In & Out > OSC**, point the OSC line at the computer running the app with the **same port as configured in the app** (default 8000). Enable output on that line. The app listens for feedback on that same UDP port, so one OSC line is enough.
+3. In the plugin, set `OSC_LINE` to the number of that OSC line.
+4. Open the Fixtures page. The app sends `Plugin "MA3 Remote Groups"` and shows *Waiting for the MA3…* until the group list arrives. The list refreshes automatically while the page is open.
 
-The plugin sends the group number and name of every group in datapool 2 over OSC. If nothing arrives, check that the plugin exists in the showfile and that the OSC line number matches.
+The plugin sends the group number and name of every group in datapool 2 over OSC. If nothing arrives, check that the plugin exists in the showfile and that the OSC line number matches. The app prints `OSC feedback listening on UDP port <port>` at startup for every configured MA3 port. To use a fixed feedback port instead, set the environment variable `OSC_IN_PORT`.
 
 ## 6. Customize
 

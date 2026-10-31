@@ -411,7 +411,7 @@
       b.className = 'group-chip';
       b.innerHTML = '<span class="group-no">' + group.number + '</span><span class="group-name"></span>';
       b.querySelector('.group-name').textContent = group.name;
-      b.addEventListener('click', function () { cmd('Group ' + group.number); });
+      b.addEventListener('click', function () { cmd('SelectFixtures Datapool 2 Group ' + group.number); });
       groupGrid.appendChild(b);
     });
   }

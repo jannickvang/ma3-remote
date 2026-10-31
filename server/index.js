@@ -283,10 +283,15 @@ const PING_INTERVAL = 15000;
 const PING_TIMEOUT = 3000;
 
 /* ------------------------------------------------------------------ *
- * Group feedback from the MA3 plugin (OSC in, on the same UDP port the
- * PWA sends commands to). The plugin only sends when the PWA asks.
+ * Group feedback from the MA3 plugin (OSC in). The MA3 sends its feedback
+ * to the port of the OSC line in In & Out. The server listens on the same
+ * UDP port the client uses to talk to the MA3 (per client), so one OSC
+ * line is enough. OSC_IN_PORT overrides this for all clients.
+ * The plugin only sends when the PWA asks.
  * ------------------------------------------------------------------ */
+const OSC_IN_OVERRIDE = process.env.OSC_IN_PORT ? parseInt(process.env.OSC_IN_PORT, 10) : null;
 const groupCollectors = new Map(); // clientId -> { groups: [], timer }
+const oscReceivers = new Map(); // port -> socket
 
 function broadcastGroups(clientId, payload) {
   const data = JSON.stringify(payload);
@@ -317,13 +322,23 @@ function handleGroupMessage(msg) {
   }
 }
 
-const oscIn = dgram.createSocket('udp4');
-oscIn.on('error', (err) => console.warn('[osc-in] error:', err.message));
-oscIn.on('message', (buf) => {
-  const msg = decodeOscMessage(buf);
-  if (msg) handleGroupMessage(msg);
-});
-oscIn.bind(PORT);
+function ensureOscReceiver(port) {
+  const listenPort = OSC_IN_OVERRIDE || port;
+  if (!Number.isInteger(listenPort) || listenPort < 1 || listenPort > 65535) return;
+  if (oscReceivers.has(listenPort)) return;
+  const socket = dgram.createSocket('udp4');
+  socket.on('error', (err) => console.warn(`[osc-in:${listenPort}] error:`, err.message));
+  socket.on('message', (buf, rinfo) => {
+    const msg = decodeOscMessage(buf);
+    if (msg) handleGroupMessage(msg);
+    else console.warn(`[osc-in:${listenPort}] undecodable packet from`, rinfo.address + ':' + rinfo.port);
+  });
+  socket.on('listening', () => {
+    console.log(`OSC feedback listening on UDP port ${listenPort}`);
+  });
+  socket.bind(listenPort);
+  oscReceivers.set(listenPort, socket);
+}
 function defaultClientConfig() {
   return store.legacy && validTarget(store.legacy.ip, store.legacy.port)
     ? store.legacy
@@ -408,6 +423,7 @@ wss.on('connection', (ws, req) => {
       ws.clientId = clientId;
       ws.client = getClient(clientId, msg);
       const link = getLink(clientId, ws.client);
+      ensureOscReceiver(ws.client.port);
       ws.send(JSON.stringify({
         type: 'clientSettings',
         name: ws.client.name,
@@ -430,6 +446,7 @@ wss.on('connection', (ws, req) => {
       ws.client.settings.ip = ip;
       ws.client.settings.port = port;
       getLink(ws.clientId, ws.client).configure(cfg);
+      ensureOscReceiver(port);
       saveConfig(store);
       checkReachability(ws.clientId, ws.client);
       return ws.send(JSON.stringify({ type: 'status', ...getLink(ws.clientId, ws.client).status() }));
@@ -440,6 +457,7 @@ wss.on('connection', (ws, req) => {
         ws.client.ip = settings.ip;
         ws.client.port = settings.port;
         getLink(ws.clientId, ws.client).configure({ ip: settings.ip, port: settings.port });
+        ensureOscReceiver(settings.port);
         checkReachability(ws.clientId, ws.client);
       }
       if (msg.settings && msg.settings.name) ws.client.name = safeClientName(msg.settings.name);

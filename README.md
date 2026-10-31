@@ -27,7 +27,7 @@ npm install
 npm start            # http://localhost:3000
 ```
 
-Environment variables: `PORT`, `MA3_IP`, `MA3_PORT`, `CONFIG_PATH`, `MA3_ATTRIBUTE_MAP`.
+Environment variables: `PORT`, `MA3_IP`, `MA3_PORT`, `CONFIG_PATH`, `MA3_ATTRIBUTE_MAP`, `OSC_IN_PORT` (optional fixed UDP port for group feedback from the MA3 plugin; by default the app listens on the same port it uses to reach the MA3).
 
 ## Build binaries (.exe)
 
