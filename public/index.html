@@ -22,6 +22,7 @@
       <button class="nav-btn" data-page="shapers">Shapers</button>
       <button class="nav-btn" data-page="toggles">Toggles</button>
       <button class="nav-btn" data-page="fixtures">Fixtures</button>
+      <button class="nav-btn" data-page="colours">Colours</button>
     </nav>
     <button id="conn" class="conn off" title="Open settings"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
   </header>
@@ -79,6 +80,20 @@
             <button class="btn" id="groups-refresh">Refresh</button>
           </div>
           <div class="group-grid scrollable" id="group-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLOURS -->
+    <section class="page" id="page-colours">
+      <div class="colour-layout">
+        <div class="panel grow">
+          <h2>Colour presets <span class="sub">Pool 4</span></h2>
+          <div class="row">
+            <span id="colours-status" class="hint">Tap Load to fetch the presets from the MA3.</span>
+            <button class="btn" id="colours-refresh">Load</button>
+          </div>
+          <div class="colour-grid scrollable" id="colour-grid"></div>
         </div>
       </div>
     </section>

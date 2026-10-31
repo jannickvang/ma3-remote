@@ -71,7 +71,9 @@ local function sendGroups()
     sendOSC(string.format('/ma3remote/groups/end,i,%d', count))
 end
 
-local function main(mode)
+-- The first argument MA3 passes to a plugin function is the display handle;
+-- the plugin arguments follow after it.
+local function main(displayHandle, mode)
     if mode == 'stop' then
         running = false
         return

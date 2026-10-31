@@ -117,6 +117,16 @@
         setGroupsStatus('No response from the MA3. Is the "MA3 Remote Groups" plugin present in the showfile?', true);
         return;
       }
+      if (msg.type === 'colours') {
+        coloursWaiting = false;
+        renderColours(msg.colours);
+        return;
+      }
+      if (msg.type === 'coloursTimeout') {
+        coloursWaiting = false;
+        setColoursStatus('No response from the MA3. Is the "MA3 Remote Colours" plugin present in the showfile?', true);
+        return;
+      }
       if (msg.type !== 'status') return;
       ma3State = msg;
       if (ma3Dialog.open && ma3Waiting) { ma3Waiting = false; ma3Dialog.close(); }
@@ -359,6 +369,45 @@
   }
 
   document.getElementById('groups-refresh').addEventListener('click', requestGroups);
+
+  /* ================= Colour presets (pool 4, via MA3 plugin) ================= */
+  var colourGrid = document.getElementById('colour-grid');
+  var coloursStatus = document.getElementById('colours-status');
+  var coloursWaiting = false;
+
+  function setColoursStatus(text, isError) {
+    coloursStatus.textContent = text;
+    coloursStatus.classList.toggle('error-text', !!isError);
+  }
+
+  function renderColours(colours) {
+    colourGrid.innerHTML = '';
+    if (!colours.length) {
+      setColoursStatus('No presets found in this range.');
+      return;
+    }
+    setColoursStatus(colours.length + ' presets loaded from the MA3.');
+    colours.forEach(function (preset) {
+      var b = document.createElement('button');
+      b.className = 'colour-chip';
+      b.innerHTML = '<span class="group-no">' + preset.number + '</span><span class="group-name"></span>';
+      b.querySelector('.group-name').textContent = preset.name;
+      b.addEventListener('click', function () { cmd('Preset 4.' + preset.number); });
+      colourGrid.appendChild(b);
+    });
+  }
+
+  function requestColours() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      setColoursStatus('No connection to the server.', true);
+      return;
+    }
+    coloursWaiting = true;
+    setColoursStatus('Waiting for the MA3…');
+    send({ type: 'requestColours' });
+  }
+
+  document.getElementById('colours-refresh').addEventListener('click', requestColours);
 
   /* ================= Toggles ================= */
   var TOGGLES_KEY = 'ma3.toggles.v1';

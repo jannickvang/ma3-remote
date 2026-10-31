@@ -121,7 +121,7 @@ function safeClientSettings(settings) {
       .filter((v) => v && typeof v === 'object' && typeof v.label === 'string' && Number.isFinite(Number(v.seq)) && Number(v.seq) > 0)
       .map((v) => ({ label: sanitizeText(v.label, 30), seq: Number(v.seq) }));
   }
-  if (typeof settings.page === 'string' && ['encoders', 'shapers', 'toggles', 'fixtures'].includes(settings.page)) {
+  if (typeof settings.page === 'string' && ['encoders', 'shapers', 'toggles', 'fixtures', 'colours'].includes(settings.page)) {
     result.page = settings.page;
   }
   if (validTarget(settings.ip, settings.port)) {
@@ -296,6 +296,7 @@ const PING_TIMEOUT = 3000;
  * ------------------------------------------------------------------ */
 const OSC_IN_OVERRIDE = process.env.OSC_IN_PORT ? parseInt(process.env.OSC_IN_PORT, 10) : null;
 const groupCollectors = new Map(); // clientId -> { groups: [], timer }
+const colourCollectors = new Map(); // clientId -> { colours: [], timer }
 const oscReceivers = new Map(); // port -> socket
 
 function broadcastGroups(clientId, payload) {
@@ -306,6 +307,10 @@ function broadcastGroups(clientId, payload) {
 }
 
 function handleGroupMessage(msg) {
+  if (msg.address.startsWith('/ma3remote/colour')) {
+    handleColourMessage(msg);
+    return;
+  }
   const collectors = [...groupCollectors.values()];
   if (!collectors.length) return;
   if (msg.address === '/ma3remote/groups/begin') {
@@ -323,6 +328,27 @@ function handleGroupMessage(msg) {
       const groups = c.groups.slice().sort((a, b) => a.number - b.number);
       groupCollectors.delete(clientId);
       broadcastGroups(clientId, { type: 'groups', groups });
+    }
+  }
+}
+
+function handleColourMessage(msg) {
+  if (!colourCollectors.size) return;
+  if (msg.address === '/ma3remote/colours/begin') {
+    for (const c of colourCollectors.values()) c.colours = [];
+  } else if (msg.address === '/ma3remote/colour' && msg.args.length >= 2) {
+    const number = Number(msg.args[0]);
+    const name = String(msg.args[1]);
+    if (Number.isFinite(number)) {
+      for (const c of colourCollectors.values()) c.colours.push({ number, name });
+    }
+  } else if (msg.address === '/ma3remote/colours/end') {
+    for (const [clientId, c] of colourCollectors) {
+      clearTimeout(c.timer);
+      c.timer = null;
+      const colours = c.colours.slice().sort((a, b) => a.number - b.number);
+      colourCollectors.delete(clientId);
+      broadcastGroups(clientId, { type: 'colours', colours });
     }
   }
 }
@@ -495,6 +521,20 @@ wss.on('connection', (ws, req) => {
       }, 8000);
       groupCollectors.set(ws.clientId, collector);
       getLink(ws.clientId, ws.client).send('Plugin "MA3 Remote Groups"');
+      return;
+    }
+    if (msg.type === 'requestColours') {
+      const existing = colourCollectors.get(ws.clientId);
+      if (existing && existing.timer) clearTimeout(existing.timer);
+      const collector = { colours: [], timer: null };
+      collector.timer = setTimeout(() => {
+        if (colourCollectors.get(ws.clientId) === collector) {
+          colourCollectors.delete(ws.clientId);
+          broadcastGroups(ws.clientId, { type: 'coloursTimeout' });
+        }
+      }, 8000);
+      colourCollectors.set(ws.clientId, collector);
+      getLink(ws.clientId, ws.client).send('Plugin "MA3 Remote Colours"');
       return;
     }
     for (const command of buildCommands(msg)) getLink(ws.clientId, ws.client).send(command);

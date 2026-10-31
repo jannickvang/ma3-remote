@@ -75,6 +75,16 @@ The Fixtures page loads the groups of datapool 2 from the console. This needs on
 
 The plugin sends the group number and name of every group in datapool 2 over OSC. If nothing arrives, check that the plugin exists in the showfile and that the OSC line number matches. The app prints `OSC feedback listening on UDP port <port>` at startup for every configured MA3 port. To use a fixed feedback port instead, set the environment variable `OSC_IN_PORT`.
 
+## Colour presets from the MA3 (plugin)
+
+The Colours page shows the colour presets (preset pool 4) of the selected datapool, with their real names.
+
+1. Import [ma3-plugin/MA3RemoteColours.lua](https://github.com/jannickvang/ma3-remote/blob/main/ma3-plugin/MA3RemoteColours.lua) into your showfile (next to the groups plugin).
+2. Set `OSC_LINE` in the plugin to the same OSC line as the groups plugin, and set `START` and `COUNT` to the preset range you use (default 507–607).
+3. On the Colours page, tap **Load**. The app sends `Plugin "MA3 Remote Colours"` and shows *Waiting for the MA3…* until the list arrives.
+
+Tapping a preset sends `Preset 4.<number>` to the MA3. The range is fixed in the plugin, so the app does not pass any arguments.
+
 ## 6. Customize
 
 - **Settings and clients:** settings are stored by the server per browser client. The first connection migrates existing frost and bottom-bar settings from the device. The client list in Settings shows known clients and allows removing them.
