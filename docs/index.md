@@ -59,17 +59,19 @@ The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the s
 | **Firewall** | Allow the app on private networks (TCP 3000 for the iPad, UDP for the MA3 port). |
 | **Readout** | Set to **Percent**, otherwise the steps are far too large. |
 | **Attribute names** | The app uses `Pan`, `Tilt`, `Zoom`, `Focus1`, `Blade 1A` to `Blade 4A` and `Blade1 Rot` to `Blade4 Rot`. If your fixtures use other names, adjust `MA3_ATTRIBUTE_MAP` (see below). |
-| **Frost presets** | The four frost buttons on the Encoders page recall MA3 presets 5.1 through 5.4 by default. Tap the gear below the buttons to configure the preset numbers per device. |
+| **Settings** | The single gear button opens one settings menu for the MA3 connection, frost presets, bottom button bar and client management. |
 | **Update** | The Update button sends `Update /NoConfirmation` followed by `ClearAll`. This way you don't have to confirm on the console and the programmer is empty afterwards. |
 | **Set** | The button sends `Set Selection Property 'Active'`. It is meant to select the whole group again after Next/Previous. |
 | **Sequences** | Cues & Seq uses start sequence 201 by default. Another value is remembered per device. |
 
 ## 6. Customize
 
-- **Bottom button bar:** the buttons are configurable in the app (order, visibility, command). Default: Highlight, Next, Previous, Set, Full, Clear, Esc.
+- **Settings and clients:** settings are stored by the server per browser client. The first connection migrates existing frost and bottom-bar settings from the device. The client list in Settings shows known clients and allows removing them.
+- **Frost presets:** the four frost buttons recall MA3 presets 5.1 through 5.4 by default. Configure the preset numbers in Settings.
+- **Bottom button bar:** the buttons are configurable in Settings (order, visibility, command). Default: Highlight, Next, Previous, Set, Full, Clear, Esc.
 - **Override attribute names:** set the environment variable `MA3_ATTRIBUTE_MAP` with JSON, for example `{"Focus":"Focus1"}`.
 - **Port of the app itself:** 3000 by default. Change it with the environment variable `PORT`.
-- **Settings:** the MA3 settings are stored in `ma3-remote-config.json` next to the program.
+- **Settings:** per-client settings are stored in `ma3-remote-config.json` next to the program. Keep this file backed up if you want to preserve the client list and settings.
 
 ## Troubleshooting
 

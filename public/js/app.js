@@ -7,10 +7,39 @@
   var connEl = document.getElementById('conn');
   var connText = document.getElementById('conn-text');
   var queue = [];
-  var ma3Dialog = document.getElementById('ma3-dialog');
+  var settingsDialog = document.getElementById('config-dialog');
+  var ma3Dialog = settingsDialog;
   var ma3Waiting = false;
 
   var ma3State = { ip: '', port: 8000, mode: 'simulation' };
+  var clientId = '';
+  var pendingServerSettings = null;
+
+  function getClientId() {
+    try {
+      var stored = localStorage.getItem('ma3.clientId');
+      if (stored && /^[A-Za-z0-9_-]{8,80}$/.test(stored)) return stored;
+      var generated = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : 'client-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+      localStorage.setItem('ma3.clientId', generated);
+      return generated;
+    } catch (e) {
+      return 'client-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    }
+  }
+
+  function localClientSettings() {
+    var settings = {};
+    try {
+      settings.frost = JSON.parse(localStorage.getItem('ma3.frostPresets.v1'));
+      settings.bar = JSON.parse(localStorage.getItem('ma3.bar.v3'));
+      settings.page = localStorage.getItem('ma3.page');
+    } catch (e) {}
+    return settings;
+  }
+
+  clientId = getClientId();
 
   function setConn(state, text) {
     connEl.className = 'conn ' + state;
@@ -34,6 +63,7 @@
     ws.onopen = function () {
       reconnectDelay = 500;
       setConn('sim', 'Server');
+      send({ type: 'registerClient', clientId: clientId, settings: localClientSettings() });
       while (queue.length) ws.send(queue.shift());
     };
     ws.onmessage = function (ev) {
@@ -41,6 +71,31 @@
       try { msg = JSON.parse(ev.data); } catch (e) { return; }
       if (msg.type === 'configError') {
         document.getElementById('ma3-error').textContent = msg.error;
+        return;
+      }
+      if (msg.type === 'clientSettings') {
+        pendingServerSettings = msg.settings || {};
+        if (msg.name) document.getElementById('client-name').value = msg.name;
+        var synced = false;
+        try {
+          if (!sessionStorage.getItem('ma3.serverSync')) {
+            ['frost', 'bar'].forEach(function (key) {
+              if (pendingServerSettings[key]) {
+                var value = JSON.stringify(pendingServerSettings[key]);
+                if (localStorage.getItem(key === 'frost' ? 'ma3.frostPresets.v1' : 'ma3.bar.v3') !== value) {
+                  localStorage.setItem(key === 'frost' ? 'ma3.frostPresets.v1' : 'ma3.bar.v3', value);
+                  synced = true;
+                }
+              }
+            });
+            if (pendingServerSettings.page && localStorage.getItem('ma3.page') !== pendingServerSettings.page) {
+              localStorage.setItem('ma3.page', pendingServerSettings.page);
+              synced = true;
+            }
+            sessionStorage.setItem('ma3.serverSync', '1');
+            if (synced) window.location.reload();
+          }
+        } catch (e) {}
         return;
       }
       if (msg.type !== 'status') return;
@@ -73,14 +128,17 @@
   var ipInput = document.getElementById('ma3-ip');
   var portInput = document.getElementById('ma3-port');
   var errEl = document.getElementById('ma3-error');
+  connEl.title = 'Open settings';
   connEl.addEventListener('click', function () {
     ipInput.value = ma3State.ip || '127.0.0.1';
     portInput.value = ma3State.port || 8000;
     errEl.textContent = '';
     document.getElementById('ma3-state').textContent = describeState();
-    ma3Dialog.showModal();
+    renderFrostConfig();
+    renderConfig();
+    renderClients();
+    settingsDialog.showModal();
   });
-  document.getElementById('ma3-cancel').addEventListener('click', function () { ma3Waiting = false; ma3Dialog.close(); });
   document.getElementById('ma3-local').addEventListener('click', function () { ipInput.value = '127.0.0.1'; portInput.value = 8000; });
   document.getElementById('ma3-save').addEventListener('click', function () {
     var ip = ipInput.value.trim();
@@ -92,7 +150,7 @@
     errEl.textContent = '';
     if (!ws || ws.readyState !== WebSocket.OPEN) { errEl.textContent = 'No connection to the server'; return; }
     ma3Waiting = true;
-    send({ type: 'setConfig', ip: ip, port: port });
+    sendSettings({ ip: ip, port: port });
   });
 
   /* ================= Navigatie ================= */
@@ -125,7 +183,7 @@
   var FROST_LABELS = ['No Frost', 'Light Frost', 'Medium Frost', 'Combined Frost'];
   var frostPresets = ['5.1', '5.2', '5.3', '5.4'];
   var frostButtons = document.querySelector('#frost-presets .frost-buttons');
-  var frostDialog = document.getElementById('frost-dialog');
+  var frostDialog = settingsDialog;
   var frostConfig = document.getElementById('frost-config');
   var frostError = document.getElementById('frost-error');
 
@@ -164,14 +222,6 @@
     });
   }
 
-  document.getElementById('frost-settings').addEventListener('click', function () {
-    frostError.textContent = '';
-    renderFrostConfig();
-    if (frostDialog.showModal) frostDialog.showModal(); else frostDialog.setAttribute('open', '');
-  });
-  document.getElementById('frost-cancel').addEventListener('click', function () {
-    if (frostDialog.close) frostDialog.close(); else frostDialog.removeAttribute('open');
-  });
   document.getElementById('frost-save').addEventListener('click', function () {
     var values = Array.prototype.map.call(frostConfig.querySelectorAll('input'), function (input) {
       return input.value.trim();
@@ -183,7 +233,7 @@
     frostPresets = values;
     try { localStorage.setItem(FROST_KEY, JSON.stringify(frostPresets)); } catch (e) {}
     renderFrostButtons();
-    if (frostDialog.close) frostDialog.close(); else frostDialog.removeAttribute('open');
+    sendSettings();
   });
   renderFrostButtons();
 
@@ -346,6 +396,18 @@
   function saveBar() {
     try { localStorage.setItem(BAR_KEY, JSON.stringify(barButtons)); } catch (e) {}
   }
+  function sendSettings(overrides) {
+    var settings = {
+      name: document.getElementById('client-name').value.trim(),
+      ip: ma3State.ip,
+      port: ma3State.port,
+      frost: frostPresets,
+      bar: barButtons,
+      page: localStorage.getItem('ma3.page') || 'encoders'
+    };
+    Object.assign(settings, overrides || {});
+    send({ type: 'saveSettings', settings: settings });
+  }
 
   function renderBar() {
     barEl.innerHTML = '';
@@ -373,7 +435,7 @@
       var chk = document.createElement('input');
       chk.type = 'checkbox';
       chk.checked = def.visible;
-      chk.addEventListener('change', function () { def.visible = chk.checked; saveBar(); renderBar(); });
+      chk.addEventListener('change', function () { def.visible = chk.checked; saveBar(); renderBar(); sendSettings(); });
       var name = document.createElement('span');
       name.className = 'name';
       name.textContent = def.label;
@@ -389,7 +451,7 @@
           var to = idx + a[1];
           if (to < 0 || to >= barButtons.length) return;
           var tmp = barButtons[idx]; barButtons[idx] = barButtons[to]; barButtons[to] = tmp;
-          saveBar(); renderBar(); renderConfig();
+          saveBar(); renderBar(); renderConfig(); sendSettings();
         });
         li.appendChild(btn);
       });
@@ -398,7 +460,7 @@
         del.textContent = '✕';
         del.addEventListener('click', function () {
           barButtons.splice(idx, 1);
-          saveBar(); renderBar(); renderConfig();
+          saveBar(); renderBar(); renderConfig(); sendSettings();
         });
         li.appendChild(del);
       }
@@ -406,16 +468,12 @@
     });
   }
 
-  document.getElementById('bar-config').addEventListener('click', function () {
-    renderConfig();
-    if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
-  });
   document.getElementById('config-close').addEventListener('click', function () {
     if (dialog.close) dialog.close(); else dialog.removeAttribute('open');
   });
   document.getElementById('config-reset').addEventListener('click', function () {
     barButtons = clone(DEFAULT_BUTTONS);
-    saveBar(); renderBar(); renderConfig();
+    saveBar(); renderBar(); renderConfig(); sendSettings();
   });
   document.getElementById('custom-add').addEventListener('click', function () {
     var labelEl = document.getElementById('custom-label');
@@ -426,10 +484,40 @@
     barButtons.push({ id: 'custom-' + Date.now(), label: label, cmd: c, visible: true, custom: true });
     labelEl.value = '';
     cmdEl.value = '';
-    saveBar(); renderBar(); renderConfig();
+    saveBar(); renderBar(); renderConfig(); sendSettings();
   });
 
+  document.getElementById('client-name-save').addEventListener('click', function () {
+    sendSettings({ name: document.getElementById('client-name').value.trim() });
+    renderClients();
+  });
+
+  function renderClients() {
+    var list = document.getElementById('client-list');
+    fetch('/api/clients').then(function (response) { return response.json(); }).then(function (clients) {
+      list.innerHTML = '';
+      clients.forEach(function (client) {
+        var item = document.createElement('li');
+        var name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = client.name + ' (' + client.ip + ':' + client.port + ')';
+        item.appendChild(name);
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = 'Remove';
+        remove.addEventListener('click', function () {
+          send({ type: 'deleteClient', clientId: client.id });
+          item.remove();
+        });
+        item.appendChild(remove);
+        list.appendChild(item);
+      });
+    }).catch(function () {});
+  }
+
   renderBar();
+  renderConfig();
+  renderClients();
 
   /* ================= Service worker ================= */
   if ('serviceWorker' in navigator) {

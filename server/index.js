@@ -59,29 +59,70 @@ function validTarget(ip, port) {
 }
 
 function loadConfig() {
-  const cfg = {
+  const legacy = {
     ip: (process.env.MA3_IP || '127.0.0.1').trim(),
     port: parseInt(process.env.MA3_PORT || '8000', 10)
   };
   try {
     const saved = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    if (saved && saved.clients && typeof saved.clients === 'object') {
+      return saved;
+    }
     if (validTarget(saved.ip, saved.port)) {
-      cfg.ip = saved.ip;
-      cfg.port = saved.port;
+      legacy.ip = saved.ip;
+      legacy.port = saved.port;
     }
   } catch (e) {
     /* no saved config */
   }
-  return cfg;
+  return { clients: {}, legacy };
 }
 
-function saveConfig(cfg) {
+function saveConfig(store) {
   try {
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(store, null, 2));
   } catch (e) {
     console.warn('[config] saving failed:', e.message);
   }
+}
+
+function safeClientId(value) {
+  return typeof value === 'string' && /^[A-Za-z0-9_-]{8,80}$/.test(value) ? value : null;
+}
+
+function safeClientName(value) {
+  return typeof value === 'string'
+    ? sanitizeText(value, 60) || 'Unnamed client'
+    : 'Unnamed client';
+}
+
+function safeClientSettings(settings) {
+  if (!settings || typeof settings !== 'object') return {};
+  const result = {};
+  if (Array.isArray(settings.frost) && settings.frost.length === 4 &&
+      settings.frost.every((v) => typeof v === 'string' && /^\d+(?:\.\d+)?$/.test(v))) {
+    result.frost = settings.frost;
+  }
+  if (Array.isArray(settings.bar) && settings.bar.length <= 50) {
+    result.bar = settings.bar
+      .filter((v) => v && typeof v === 'object' && typeof v.label === 'string' && typeof v.cmd === 'string')
+      .map((v) => ({
+        id: sanitizeText(v.id, 80),
+        label: sanitizeText(v.label, 30),
+        cmd: sanitizeText(v.cmd, 200),
+        visible: v.visible !== false,
+        custom: v.custom === true
+      }));
+  }
+  if (typeof settings.page === 'string' && ['encoders', 'shapers', 'cues', 'fixtures'].includes(settings.page)) {
+    result.page = settings.page;
+  }
+  if (validTarget(settings.ip, settings.port)) {
+    result.ip = settings.ip;
+    result.port = settings.port;
+  }
+  return result;
 }
 
 /* ------------------------------------------------------------------ *
@@ -188,23 +229,47 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 8 * 1024 });
 
-function broadcastStatus() {
-  const payload = JSON.stringify({ type: 'status', ...ma3.status() });
-  for (const client of wss.clients) {
-    if (client.readyState === WebSocket.OPEN) client.send(payload);
+const store = loadConfig();
+const links = new Map();
+function defaultClientConfig() {
+  return store.legacy && validTarget(store.legacy.ip, store.legacy.port)
+    ? store.legacy
+    : { ip: '127.0.0.1', port: 8000 };
+}
+function getClient(clientId, submitted) {
+  let client = store.clients[clientId];
+  if (!client) {
+    const settings = safeClientSettings(submitted && submitted.settings);
+    const target = validTarget(settings.ip, settings.port) ? settings : defaultClientConfig();
+    client = store.clients[clientId] = {
+      name: safeClientName(submitted && (submitted.name || (submitted.settings && submitted.settings.name))),
+      ip: target.ip,
+      port: target.port,
+      settings,
+      createdAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString()
+    };
+    saveConfig(store);
   }
+  client.lastSeenAt = new Date().toISOString();
+  return client;
+}
+function getLink(clientId, client) {
+  if (!links.has(clientId)) links.set(clientId, new MA3Link({ ip: client.ip, port: client.port }, () => {}));
+  return links.get(clientId);
 }
 
-const initial = loadConfig();
-const ma3 = new MA3Link(initial, broadcastStatus);
-
-app.get('/api/status', (req, res) => res.json(ma3.status()));
+app.get('/api/clients', (req, res) => {
+  res.json(Object.entries(store.clients).map(([id, client]) => ({
+    id, name: client.name, ip: client.ip, port: client.port, lastSeenAt: client.lastSeenAt
+  })));
+});
 
 wss.on('connection', (ws, req) => {
   console.log('[ws] client connected:', req.socket.remoteAddress);
   ws.isAlive = true;
   ws.on('pong', () => (ws.isAlive = true));
-  ws.send(JSON.stringify({ type: 'status', ...ma3.status() }));
+  ws.send(JSON.stringify({ type: 'awaitingClientId' }));
 
   ws.on('message', (data) => {
     let msg;
@@ -215,6 +280,20 @@ wss.on('connection', (ws, req) => {
     }
     if (!msg || typeof msg !== 'object') return;
     if (msg.type === 'ping') return ws.send(JSON.stringify({ type: 'pong' }));
+    if (msg.type === 'registerClient') {
+      const clientId = safeClientId(msg.clientId);
+      if (!clientId) return ws.send(JSON.stringify({ type: 'configError', error: 'Invalid client ID' }));
+      ws.clientId = clientId;
+      ws.client = getClient(clientId, msg);
+      const link = getLink(clientId, ws.client);
+      ws.send(JSON.stringify({
+        type: 'clientSettings',
+        name: ws.client.name,
+        settings: ws.client.settings
+      }));
+      return ws.send(JSON.stringify({ type: 'status', ...link.status() }));
+    }
+    if (!ws.clientId || !ws.client) return;
     if (msg.type === 'setConfig') {
       const ip = typeof msg.ip === 'string' ? msg.ip.trim() : '';
       const port = parseInt(msg.port, 10);
@@ -223,14 +302,49 @@ wss.on('connection', (ws, req) => {
       }
       const cfg = { ip, port };
       console.log(`[config] new MA3 target: ${ip}:${port}`);
-      saveConfig(cfg);
-      ma3.configure(cfg);
-      return;
+      ws.client.ip = ip;
+      ws.client.port = port;
+      ws.client.settings.ip = ip;
+      ws.client.settings.port = port;
+      getLink(ws.clientId, ws.client).configure(cfg);
+      saveConfig(store);
+      return ws.send(JSON.stringify({ type: 'status', ...getLink(ws.clientId, ws.client).status() }));
     }
-    for (const cmd of buildCommands(msg)) ma3.send(cmd);
+    if (msg.type === 'saveSettings') {
+      const settings = safeClientSettings(msg.settings);
+      if (settings.ip && settings.port) {
+        ws.client.ip = settings.ip;
+        ws.client.port = settings.port;
+        getLink(ws.clientId, ws.client).configure({ ip: settings.ip, port: settings.port });
+      }
+      if (msg.settings && msg.settings.name) ws.client.name = safeClientName(msg.settings.name);
+      ws.client.settings = { ...ws.client.settings, ...settings };
+      saveConfig(store);
+      ws.send(JSON.stringify({ type: 'clientSettings', name: ws.client.name, settings: ws.client.settings }));
+      return ws.send(JSON.stringify({ type: 'status', ...getLink(ws.clientId, ws.client).status() }));
+    }
+    if (msg.type === 'renameClient') {
+      ws.client.name = safeClientName(msg.name);
+      saveConfig(store);
+      return ws.send(JSON.stringify({ type: 'clientSettings', name: ws.client.name, settings: ws.client.settings }));
+    }
+    if (msg.type === 'deleteClient') {
+      const targetId = safeClientId(msg.clientId) || ws.clientId;
+      delete store.clients[targetId];
+      links.delete(targetId);
+      saveConfig(store);
+      return ws.send(JSON.stringify({ type: 'clientDeleted', clientId: targetId }));
+    }
+    for (const command of buildCommands(msg)) getLink(ws.clientId, ws.client).send(command);
   });
 
-  ws.on('close', () => console.log('[ws] client gone'));
+  ws.on('close', () => {
+    if (ws.client) {
+      ws.client.lastSeenAt = new Date().toISOString();
+      saveConfig(store);
+    }
+    console.log('[ws] client gone');
+  });
 });
 
 setInterval(() => {
@@ -257,5 +371,5 @@ server.listen(PORT, '0.0.0.0', () => {
       if (i.family === 'IPv4' && !i.internal) console.log(`  Open on your iPad: http://${i.address}:${PORT}`);
     }
   }
-  console.log(`MA3 target: ${ma3.ip}:${ma3.port}`);
+  console.log('Per-client MA3 targets enabled');
 });

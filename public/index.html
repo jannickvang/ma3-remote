@@ -23,7 +23,7 @@
       <button class="nav-btn" data-page="cues">Cues &amp; Seq</button>
       <button class="nav-btn" data-page="fixtures">Fixtures</button>
     </nav>
-    <button id="conn" class="conn off" title="Set MA3 connection"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
+    <button id="conn" class="conn off" title="Open settings"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
   </header>
 
   <main id="pages">
@@ -35,7 +35,6 @@
           <div class="frost-presets" id="frost-presets">
             <div class="wheel-label">Frost</div>
             <div class="frost-buttons"></div>
-            <button class="frost-settings" id="frost-settings" type="button" aria-label="Configure frost presets">⚙</button>
           </div>
         </div>
         <div class="enc-side" id="wheel-tilt"></div>
@@ -101,46 +100,54 @@
 
   <footer id="bottombar">
     <div id="bar-buttons"></div>
-    <button id="bar-config" class="bar-btn cfg" aria-label="Customize bar">⚙</button>
   </footer>
 
   <dialog id="config-dialog">
-    <h2>Customize button bar</h2>
-    <ul id="config-list"></ul>
-    <div class="row">
-      <input type="text" id="custom-label" placeholder="Label" maxlength="12">
-      <input type="text" id="custom-cmd" placeholder="MA3 command, e.g. Go+ Sequence 1" maxlength="150">
-      <button class="btn" id="custom-add">Add</button>
-    </div>
-    <div class="row end">
-      <button class="btn" id="config-reset">Default</button>
-      <button class="btn accent" id="config-close">Done</button>
-    </div>
-  </dialog>
-
-  <dialog id="frost-dialog">
-    <h2>Frost presets</h2>
-    <p class="hint">Set the MA3 preset number for each frost button.</p>
+    <h2>Settings</h2>
+    <section class="settings-section">
+      <h3>MA3 connection</h3>
+      <p id="ma3-state" class="hint"></p>
+      <div class="row">
+        <label>IP address / hostname <input type="text" id="ma3-ip" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="127.0.0.1"></label>
+        <label>Port <input type="number" id="ma3-port" inputmode="numeric" min="1" max="65535" value="8000"></label>
+      </div>
+      <div class="row">
+        <button class="btn" id="ma3-local">This computer</button>
+        <button class="btn accent" id="ma3-save">Save connection</button>
+      </div>
+      <p id="ma3-error" class="error"></p>
+    </section>
+    <section class="settings-section">
+      <h3>Frost presets</h3>
+      <p class="hint">Set the MA3 preset number for each frost button.</p>
     <div class="frost-config" id="frost-config"></div>
     <p id="frost-error" class="error"></p>
     <div class="row end">
-      <button class="btn" id="frost-cancel">Cancel</button>
-      <button class="btn accent" id="frost-save">Save</button>
+      <button class="btn accent" id="frost-save">Save frost</button>
     </div>
-  </dialog>
-
-  <dialog id="ma3-dialog">
-    <h2>MA3 connection</h2>
-    <p id="ma3-state" class="hint"></p>
-    <div class="row">
-      <label>IP address / hostname <input type="text" id="ma3-ip" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="127.0.0.1"></label>
-      <label>Port <input type="number" id="ma3-port" inputmode="numeric" min="1" max="65535" value="8000"></label>
-    </div>
-    <p id="ma3-error" class="error"></p>
+    </section>
+    <section class="settings-section">
+      <h3>Bottom button bar</h3>
+      <ul id="config-list"></ul>
+      <div class="row">
+        <input type="text" id="custom-label" placeholder="Label" maxlength="12">
+        <input type="text" id="custom-cmd" placeholder="MA3 command, e.g. Go+ Sequence 1" maxlength="150">
+        <button class="btn" id="custom-add">Add</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="config-reset">Default bar</button>
+      </div>
+    </section>
+    <section class="settings-section">
+      <h3>This client</h3>
+      <div class="row">
+        <label>Client name <input type="text" id="client-name" maxlength="60" placeholder="Optional name"></label>
+        <button class="btn" id="client-name-save">Save name</button>
+      </div>
+      <ul id="client-list"></ul>
+    </section>
     <div class="row end">
-      <button class="btn" id="ma3-local">This computer</button>
-      <button class="btn" id="ma3-cancel">Cancel</button>
-      <button class="btn accent" id="ma3-save">Save &amp; connect</button>
+      <button class="btn accent" id="config-close">Done</button>
     </div>
   </dialog>
 
