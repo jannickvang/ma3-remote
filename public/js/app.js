@@ -105,6 +105,16 @@
         } catch (e) {}
         return;
       }
+      if (msg.type === 'groups') {
+        groupsWaiting = false;
+        renderGroups(msg.groups);
+        return;
+      }
+      if (msg.type === 'groupsTimeout') {
+        groupsWaiting = false;
+        setGroupsStatus('No response from the MA3. Is the "MA3 Remote Groups" plugin present in the showfile?', true);
+        return;
+      }
       if (msg.type !== 'status') return;
       ma3State = msg;
       if (ma3Dialog.open && ma3Waiting) { ma3Waiting = false; ma3Dialog.close(); }
@@ -169,6 +179,7 @@
     navBtns.forEach(function (b) { b.classList.toggle('active', b.dataset.page === name); });
     pages.forEach(function (p) { p.classList.toggle('active', p.id === 'page-' + name); });
     try { localStorage.setItem('ma3.page', name); } catch (e) {}
+    if (name === 'fixtures') startGroupPolling(); else stopGroupPolling();
   }
   navBtns.forEach(function (b) { b.addEventListener('click', function () { showPage(b.dataset.page); }); });
   try { var saved = localStorage.getItem('ma3.page'); if (saved) showPage(saved); } catch (e) {}
@@ -375,6 +386,60 @@
     cmd((selMode === 'group' ? 'Group ' : 'Fixture ') + text);
     selInput.value = '';
   });
+
+  /* ================= Groups (datapool 2, via MA3 plugin) ================= */
+  var groupGrid = document.getElementById('group-grid');
+  var groupsStatus = document.getElementById('groups-status');
+  var groupsWaiting = false;
+  var groupPollTimer = null;
+  var GROUP_POLL_MS = 5000;
+
+  function setGroupsStatus(text, isError) {
+    groupsStatus.textContent = text;
+    groupsStatus.classList.toggle('error-text', !!isError);
+  }
+
+  function renderGroups(groups) {
+    groupGrid.innerHTML = '';
+    if (!groups.length) {
+      setGroupsStatus('Datapool 2 contains no groups.');
+      return;
+    }
+    setGroupsStatus(groups.length + ' groups loaded from the MA3.');
+    groups.forEach(function (group) {
+      var b = document.createElement('button');
+      b.className = 'group-chip';
+      b.innerHTML = '<span class="group-no">' + group.number + '</span><span class="group-name"></span>';
+      b.querySelector('.group-name').textContent = group.name;
+      b.addEventListener('click', function () { cmd('Group ' + group.number); });
+      groupGrid.appendChild(b);
+    });
+  }
+
+  function requestGroups() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      setGroupsStatus('No connection to the server.', true);
+      return;
+    }
+    groupsWaiting = true;
+    setGroupsStatus('Waiting for the MA3…');
+    send({ type: 'requestGroups' });
+  }
+
+  function startGroupPolling() {
+    stopGroupPolling();
+    requestGroups();
+    groupPollTimer = setInterval(function () {
+      if (!groupsWaiting) requestGroups();
+    }, GROUP_POLL_MS);
+  }
+
+  function stopGroupPolling() {
+    if (groupPollTimer) clearInterval(groupPollTimer);
+    groupPollTimer = null;
+  }
+
+  document.getElementById('groups-refresh').addEventListener('click', requestGroups);
 
   /* ================= Bottom button bar ================= */
   var DEFAULT_BUTTONS = [

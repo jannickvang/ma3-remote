@@ -211,6 +211,14 @@ input:focus { border-color: var(--accent); }
 .fix-layout > .panel:first-child { width: 340px; flex: 0 0 340px; }
 .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .keypad button { min-height: 52px; font-size: 18px; padding: 0; }
+.group-grid {
+  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; align-content: start;
+}
+.group-chip { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 12px; text-align: left; }
+.group-chip .group-no { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+.group-chip .group-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hint.error-text { color: var(--bad); }
 
 /* ---------- Bottom bar ---------- */
 #bottombar {

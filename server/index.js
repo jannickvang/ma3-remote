@@ -146,6 +146,39 @@ function encodeOsc(address, args) {
   return Buffer.concat([oscString(address), oscString(tags), ...args.map((a) => oscString(String(a)))]);
 }
 
+/* ------------------------------------------------------------------ *
+ * OSC decoding (feedback from the MA3 plugin).
+ * ------------------------------------------------------------------ */
+function readOscString(buf, offset) {
+  const end = buf.indexOf(0, offset);
+  if (end === -1) return null;
+  return { value: buf.toString('utf8', offset, end), next: end + 1 + ((4 - ((end + 1) % 4)) % 4) };
+}
+
+function decodeOscMessage(buf) {
+  const address = readOscString(buf, 0);
+  if (!address) return null;
+  const tags = readOscString(buf, address.next);
+  if (!tags || !tags.value.startsWith(',')) return null;
+  const args = [];
+  let offset = tags.next;
+  for (const tag of tags.value.slice(1)) {
+    if (tag === 'i' || tag === 'f') {
+      if (offset + 4 > buf.length) return null;
+      args.push(tag === 'i' ? buf.readInt32BE(offset) : buf.readFloatBE(offset));
+      offset += 4;
+    } else if (tag === 's') {
+      const str = readOscString(buf, offset);
+      if (!str) return null;
+      args.push(str.value);
+      offset = str.next;
+    } else if (tag === 'T') args.push(true);
+    else if (tag === 'F') args.push(false);
+    else return null;
+  }
+  return { address: address.value, args };
+}
+
 class MA3Link {
   constructor(cfg, onStatus) {
     this.onStatus = onStatus;
@@ -248,6 +281,49 @@ const store = loadConfig();
 const links = new Map();
 const PING_INTERVAL = 15000;
 const PING_TIMEOUT = 3000;
+
+/* ------------------------------------------------------------------ *
+ * Group feedback from the MA3 plugin (OSC in, on the same UDP port the
+ * PWA sends commands to). The plugin only sends when the PWA asks.
+ * ------------------------------------------------------------------ */
+const groupCollectors = new Map(); // clientId -> { groups: [], timer }
+
+function broadcastGroups(clientId, payload) {
+  const data = JSON.stringify(payload);
+  for (const ws of wss.clients) {
+    if (ws.readyState === WebSocket.OPEN && ws.clientId === clientId) ws.send(data);
+  }
+}
+
+function handleGroupMessage(msg) {
+  const collectors = [...groupCollectors.values()];
+  if (!collectors.length) return;
+  if (msg.address === '/ma3remote/groups/begin') {
+    for (const c of collectors) c.groups = [];
+  } else if (msg.address === '/ma3remote/group' && msg.args.length >= 2) {
+    const number = Number(msg.args[0]);
+    const name = String(msg.args[1]);
+    if (Number.isFinite(number)) {
+      for (const c of collectors) c.groups.push({ number, name });
+    }
+  } else if (msg.address === '/ma3remote/groups/end') {
+    for (const [clientId, c] of groupCollectors) {
+      clearTimeout(c.timer);
+      c.timer = null;
+      const groups = c.groups.slice().sort((a, b) => a.number - b.number);
+      groupCollectors.delete(clientId);
+      broadcastGroups(clientId, { type: 'groups', groups });
+    }
+  }
+}
+
+const oscIn = dgram.createSocket('udp4');
+oscIn.on('error', (err) => console.warn('[osc-in] error:', err.message));
+oscIn.on('message', (buf) => {
+  const msg = decodeOscMessage(buf);
+  if (msg) handleGroupMessage(msg);
+});
+oscIn.bind(PORT);
 function defaultClientConfig() {
   return store.legacy && validTarget(store.legacy.ip, store.legacy.port)
     ? store.legacy
@@ -383,6 +459,20 @@ wss.on('connection', (ws, req) => {
       links.delete(targetId);
       saveConfig(store);
       return ws.send(JSON.stringify({ type: 'clientDeleted', clientId: targetId }));
+    }
+    if (msg.type === 'requestGroups') {
+      const existing = groupCollectors.get(ws.clientId);
+      if (existing && existing.timer) clearTimeout(existing.timer);
+      const collector = { groups: [], timer: null };
+      collector.timer = setTimeout(() => {
+        if (groupCollectors.get(ws.clientId) === collector) {
+          groupCollectors.delete(ws.clientId);
+          broadcastGroups(ws.clientId, { type: 'groupsTimeout' });
+        }
+      }, 8000);
+      groupCollectors.set(ws.clientId, collector);
+      getLink(ws.clientId, ws.client).send('Plugin "MA3 Remote Groups"');
+      return;
     }
     for (const command of buildCommands(msg)) getLink(ws.clientId, ws.client).send(command);
   });
