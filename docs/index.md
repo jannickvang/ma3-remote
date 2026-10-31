@@ -4,6 +4,8 @@ title: Manual
 
 # MA3 Remote PWA manual
 
+**English | [Nederlands](index.nl.md)**
+
 Step by step instructions to get the app working. If something goes wrong, see [Troubleshooting](#troubleshooting).
 
 ## 1. What you need
