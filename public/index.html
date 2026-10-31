@@ -20,6 +20,7 @@
     <nav id="nav">
       <button class="nav-btn active" data-page="encoders">Encoders</button>
       <button class="nav-btn" data-page="shapers">Shapers</button>
+      <button class="nav-btn" data-page="toggles">Toggles</button>
       <button class="nav-btn" data-page="fixtures">Fixtures</button>
     </nav>
     <button id="conn" class="conn off" title="Open settings"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
@@ -43,6 +44,16 @@
     <!-- SHAPERS -->
     <section class="page" id="page-shapers">
       <div class="shaper-grid" id="shaper-grid"></div>
+    </section>
+
+    <!-- TOGGLES -->
+    <section class="page" id="page-toggles">
+      <div class="toggle-layout">
+        <div class="panel grow">
+          <h2>Toggles <button class="panel-gear" id="toggles-config" type="button" aria-label="Configure toggles">⚙</button></h2>
+          <div class="toggle-grid scrollable" id="toggle-grid"></div>
+        </div>
+      </div>
     </section>
 
     <!-- FIXTURES -->
@@ -123,6 +134,21 @@
     </section>
     <div class="row end">
       <button class="btn accent" id="config-close">Done</button>
+    </div>
+  </dialog>
+
+  <dialog id="toggles-dialog">
+    <h2>Configure toggles</h2>
+    <p class="hint">Each button toggles a sequence in the MA3.</p>
+    <ul id="toggles-list"></ul>
+    <div class="row">
+      <input type="text" id="toggle-label" placeholder="Label" maxlength="20">
+      <input type="number" id="toggle-seq" inputmode="decimal" min="1" placeholder="Seq no.">
+      <button class="btn" id="toggle-add">Add</button>
+    </div>
+    <p id="toggles-error" class="error"></p>
+    <div class="row end">
+      <button class="btn accent" id="toggles-close">Done</button>
     </div>
   </dialog>
 

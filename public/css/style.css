@@ -196,6 +196,22 @@ input:focus { border-color: var(--accent); }
 .shaper-blade .pair { flex: 1; min-height: 0; display: flex; gap: 8px; }
 .shaper-blade .wheel { flex: 1; }
 
+/* ---------- Toggles ---------- */
+.toggle-layout { flex: 1; min-height: 0; display: flex; gap: 10px; }
+.toggle-grid {
+  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; align-content: start;
+}
+.toggle-btn { min-height: 72px; font-size: 16px; font-weight: 600; }
+.toggle-btn:active { background: #3a2c14; border-color: var(--accent); color: var(--accent); }
+.panel-gear { float: right; min-height: 32px; min-width: 40px; padding: 0; font-size: 15px; color: var(--muted); }
+#toggles-list { list-style: none; margin: 0 0 12px; padding: 0; max-height: 40vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+#toggles-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+#toggles-list li .name { flex: 1; }
+#toggles-list li .name small { color: var(--muted); display: block; }
+#toggles-list li button { min-height: 44px; min-width: 44px; padding: 0 10px; }
+#toggle-seq { width: 110px; }
+
 /* ---------- Fixtures ---------- */
 .fix-layout { flex: 1; min-height: 0; display: flex; gap: 10px; }
 .fix-layout > .panel:first-child { width: 340px; flex: 0 0 340px; }

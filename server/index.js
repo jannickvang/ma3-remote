@@ -116,7 +116,12 @@ function safeClientSettings(settings) {
         custom: v.custom === true
       }));
   }
-  if (typeof settings.page === 'string' && ['encoders', 'shapers', 'fixtures'].includes(settings.page)) {
+  if (Array.isArray(settings.toggles) && settings.toggles.length <= 100) {
+    result.toggles = settings.toggles
+      .filter((v) => v && typeof v === 'object' && typeof v.label === 'string' && Number.isFinite(Number(v.seq)) && Number(v.seq) > 0)
+      .map((v) => ({ label: sanitizeText(v.label, 30), seq: Number(v.seq) }));
+  }
+  if (typeof settings.page === 'string' && ['encoders', 'shapers', 'toggles', 'fixtures'].includes(settings.page)) {
     result.page = settings.page;
   }
   if (validTarget(settings.ip, settings.port)) {

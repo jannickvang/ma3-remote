@@ -34,6 +34,7 @@
     try {
       settings.frost = JSON.parse(localStorage.getItem('ma3.frostPresets.v1'));
       settings.bar = JSON.parse(localStorage.getItem('ma3.bar.v3'));
+      settings.toggles = JSON.parse(localStorage.getItem('ma3.toggles.v1'));
       settings.page = localStorage.getItem('ma3.page');
     } catch (e) {}
     return settings;
@@ -86,11 +87,12 @@
         var synced = false;
         try {
           if (!sessionStorage.getItem('ma3.serverSync')) {
-            ['frost', 'bar'].forEach(function (key) {
+            var syncKeys = { frost: 'ma3.frostPresets.v1', bar: 'ma3.bar.v3', toggles: 'ma3.toggles.v1' };
+            Object.keys(syncKeys).forEach(function (key) {
               if (pendingServerSettings[key]) {
                 var value = JSON.stringify(pendingServerSettings[key]);
-                if (localStorage.getItem(key === 'frost' ? 'ma3.frostPresets.v1' : 'ma3.bar.v3') !== value) {
-                  localStorage.setItem(key === 'frost' ? 'ma3.frostPresets.v1' : 'ma3.bar.v3', value);
+                if (localStorage.getItem(syncKeys[key]) !== value) {
+                  localStorage.setItem(syncKeys[key], value);
                   synced = true;
                 }
               }
@@ -358,6 +360,101 @@
 
   document.getElementById('groups-refresh').addEventListener('click', requestGroups);
 
+  /* ================= Toggles ================= */
+  var TOGGLES_KEY = 'ma3.toggles.v1';
+  var toggles = [];
+  var toggleGrid = document.getElementById('toggle-grid');
+  var togglesDialog = document.getElementById('toggles-dialog');
+  var togglesList = document.getElementById('toggles-list');
+  var togglesError = document.getElementById('toggles-error');
+
+  try {
+    var savedToggles = JSON.parse(localStorage.getItem(TOGGLES_KEY));
+    if (Array.isArray(savedToggles)) toggles = savedToggles;
+  } catch (e) {}
+
+  function saveToggles() {
+    try { localStorage.setItem(TOGGLES_KEY, JSON.stringify(toggles)); } catch (e) {}
+  }
+
+  function renderToggles() {
+    toggleGrid.innerHTML = '';
+    if (!toggles.length) {
+      var empty = document.createElement('p');
+      empty.className = 'hint';
+      empty.textContent = 'No toggles yet. Use the gear to add buttons.';
+      toggleGrid.appendChild(empty);
+      return;
+    }
+    toggles.forEach(function (toggle, idx) {
+      var b = document.createElement('button');
+      b.className = 'toggle-btn';
+      b.textContent = toggle.label;
+      b.addEventListener('click', function () {
+        cmd('Toggle Sequence ' + toggle.seq);
+      });
+      toggleGrid.appendChild(b);
+    });
+  }
+
+  function renderTogglesConfig() {
+    togglesList.innerHTML = '';
+    toggles.forEach(function (toggle, idx) {
+      var li = document.createElement('li');
+      var name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = toggle.label;
+      var small = document.createElement('small');
+      small.textContent = 'Sequence ' + toggle.seq;
+      name.appendChild(small);
+      li.appendChild(name);
+      [['▲', -1], ['▼', 1]].forEach(function (a) {
+        var btn = document.createElement('button');
+        btn.textContent = a[0];
+        btn.addEventListener('click', function () {
+          var to = idx + a[1];
+          if (to < 0 || to >= toggles.length) return;
+          var tmp = toggles[idx]; toggles[idx] = toggles[to]; toggles[to] = tmp;
+          saveToggles(); renderToggles(); renderTogglesConfig(); sendSettings();
+        });
+        li.appendChild(btn);
+      });
+      var del = document.createElement('button');
+      del.textContent = '✕';
+      del.addEventListener('click', function () {
+        toggles.splice(idx, 1);
+        saveToggles(); renderToggles(); renderTogglesConfig(); sendSettings();
+      });
+      li.appendChild(del);
+      togglesList.appendChild(li);
+    });
+  }
+
+  document.getElementById('toggles-config').addEventListener('click', function () {
+    togglesError.textContent = '';
+    renderTogglesConfig();
+    if (togglesDialog.showModal) togglesDialog.showModal(); else togglesDialog.setAttribute('open', '');
+  });
+  document.getElementById('toggles-close').addEventListener('click', function () {
+    if (togglesDialog.close) togglesDialog.close(); else togglesDialog.removeAttribute('open');
+  });
+  document.getElementById('toggle-add').addEventListener('click', function () {
+    var labelEl = document.getElementById('toggle-label');
+    var seqEl = document.getElementById('toggle-seq');
+    var label = labelEl.value.trim();
+    var seq = parseFloat(seqEl.value);
+    if (!label || !isFinite(seq) || seq <= 0) {
+      togglesError.textContent = 'Enter a label and a valid sequence number';
+      return;
+    }
+    togglesError.textContent = '';
+    toggles.push({ label: label, seq: seq });
+    labelEl.value = '';
+    seqEl.value = '';
+    saveToggles(); renderToggles(); renderTogglesConfig(); sendSettings();
+  });
+  renderToggles();
+
   /* ================= Bottom button bar ================= */
   var DEFAULT_BUTTONS = [
     { id: 'highlight', label: 'Highlight', cmd: 'Highlight', visible: true },
@@ -394,6 +491,7 @@
       port: ma3State.port,
       frost: frostPresets,
       bar: barButtons,
+      toggles: toggles,
       page: localStorage.getItem('ma3.page') || 'encoders'
     };
     Object.assign(settings, overrides || {});

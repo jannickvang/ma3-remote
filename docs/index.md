@@ -62,6 +62,7 @@ The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the s
 | **Settings** | The single gear button opens one settings menu for the MA3 connection, frost presets, bottom button bar and client management. The server periodically pings each configured MA3 host and shows whether it is reachable. |
 | **Set** | The button sends `Set Selection Property 'Active'`. It is meant to select the whole group again after Next/Previous. |
 | **Groups** | The Fixtures page shows the groups of datapool 2 with number and name. Tapping a group selects its fixtures in the MA3 (`SelectFixtures Datapool 2 Group <number>`). |
+| **Toggles** | The Toggles page contains configurable buttons. Each button sends `Toggle Sequence <number>` to the MA3. Add, reorder and delete buttons via the gear on the page. |
 
 ## Groups from the MA3 (plugin)
 
