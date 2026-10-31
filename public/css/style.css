@@ -221,9 +221,9 @@ input:focus { border-color: var(--accent); }
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; align-content: start;
 }
-.group-chip { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 12px; text-align: left; }
-.group-chip .group-no { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
-.group-chip .group-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-chip { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 56px; padding: 6px 12px; text-align: left; }
+.group-chip .group-no { color: var(--muted); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.group-chip .group-name { width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 600; }
 .colour-layout { flex: 1; min-height: 0; display: flex; gap: 10px; }
 .colour-grid {
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
