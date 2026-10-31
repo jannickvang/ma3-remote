@@ -20,7 +20,6 @@
     <nav id="nav">
       <button class="nav-btn active" data-page="encoders">Encoders</button>
       <button class="nav-btn" data-page="shapers">Shapers</button>
-      <button class="nav-btn" data-page="cues">Cues &amp; Seq</button>
       <button class="nav-btn" data-page="fixtures">Fixtures</button>
     </nav>
     <button id="conn" class="conn off" title="Open settings"><span class="dot"></span><span id="conn-text">Offline</span><span class="gear">⚙</span></button>
@@ -44,38 +43,6 @@
     <!-- SHAPERS -->
     <section class="page" id="page-shapers">
       <div class="shaper-grid" id="shaper-grid"></div>
-    </section>
-
-    <!-- CUES & SEQ -->
-    <section class="page" id="page-cues">
-      <div class="cues-layout">
-        <div class="panel">
-          <h2>Sequences</h2>
-          <div class="row">
-            <label>Start seq <input type="number" id="seq-start" inputmode="numeric" min="1" value="201"></label>
-            <label>Count <input type="number" id="seq-count" inputmode="numeric" min="1" max="200" value="30"></label>
-            <button class="btn" id="seq-build">Show</button>
-          </div>
-          <div class="seq-overview" id="seq-overview"></div>
-        </div>
-        <div class="panel">
-          <h2>Cue actions <span class="sub" id="sel-label"></span></h2>
-          <div class="row">
-            <label>Cue no. <input type="number" id="cue-number" inputmode="decimal" min="1" value="1"></label>
-            <button class="btn accent" id="edit-cue1">Edit Cue 1</button>
-          </div>
-          <div class="row">
-            <div class="segmented" id="store-mode">
-              <button class="seg active" data-mode="merge">Merge</button>
-              <button class="seg" data-mode="overwrite">Overwrite</button>
-            </div>
-          </div>
-          <div class="row">
-            <button class="btn big" id="store-cue">Store Cue</button>
-            <button class="btn big accent" id="update-btn">Update</button>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- FIXTURES -->

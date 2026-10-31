@@ -184,7 +184,7 @@
   navBtns.forEach(function (b) { b.addEventListener('click', function () { showPage(b.dataset.page); }); });
   try { var saved = localStorage.getItem('ma3.page'); if (saved) showPage(saved); } catch (e) {}
 
-  ['bar-buttons', 'seq-overview', 'config-list'].forEach(function (id) {
+  ['bar-buttons', 'config-list'].forEach(function (id) {
     document.getElementById(id).classList.add('scrollable');
   });
 
@@ -268,89 +268,6 @@
     new Wheel(pair, { attr: 'Blade' + i + 'Rot', label: 'Rotation', pxPerStep: 7, stepSize: 0.05, accel: true });
   }
 
-
-  /* ================= Cues & Seq ================= */
-  var selectedSeq = null;
-  var storeMode = 'merge';
-  var overview = document.getElementById('seq-overview');
-  var selLabel = document.getElementById('sel-label');
-  var seqStart = document.getElementById('seq-start');
-  var seqCount = document.getElementById('seq-count');
-  var cueNumber = document.getElementById('cue-number');
-
-  function intVal(el, def, min, max) {
-    var n = parseInt(el.value, 10);
-    if (!isFinite(n)) n = def;
-    return Math.min(max, Math.max(min, n));
-  }
-
-  var savedStart = parseInt(localStorage.getItem('ma3.seqStart'), 10);
-  if (isFinite(savedStart) && savedStart > 0) seqStart.value = savedStart;
-
-  function buildOverview() {
-    var start = intVal(seqStart, 201, 1, 99999);
-    localStorage.setItem('ma3.seqStart', String(start));
-    var count = intVal(seqCount, 30, 1, 200);
-    overview.innerHTML = '';
-    for (var n = start; n < start + count; n++) {
-      var b = document.createElement('button');
-      b.className = 'seq-chip' + (n === selectedSeq ? ' selected' : '');
-      b.textContent = n;
-      b.dataset.seq = n;
-      overview.appendChild(b);
-    }
-    if (selectedSeq === null || selectedSeq < start || selectedSeq >= start + count) selectSeq(start);
-  }
-
-  function selectSeq(n) {
-    selectedSeq = n;
-    selLabel.textContent = 'Seq ' + n;
-    overview.querySelectorAll('.seq-chip').forEach(function (c) {
-      c.classList.toggle('selected', parseInt(c.dataset.seq, 10) === n);
-    });
-  }
-
-  overview.addEventListener('click', function (e) {
-    var chip = e.target.closest('.seq-chip');
-    if (chip) selectSeq(parseInt(chip.dataset.seq, 10));
-  });
-  document.getElementById('seq-build').addEventListener('click', buildOverview);
-  seqStart.addEventListener('change', buildOverview);
-  seqCount.addEventListener('change', buildOverview);
-
-  function doUpdate() {
-    cmd('Update /NoConfirmation');
-    cmd('ClearAll');
-  }
-  window.ma3Update = doUpdate;
-
-  function cueVal() {
-    var v = parseFloat(cueNumber.value);
-    return isFinite(v) && v > 0 ? v : 1;
-  }
-
-  document.getElementById('edit-cue1').addEventListener('click', function () {
-    cmd('Edit Sequence ' + selectedSeq + ' Cue 1');
-  });
-
-  var modeBtns = document.querySelectorAll('#store-mode .seg');
-  modeBtns.forEach(function (b) {
-    b.addEventListener('click', function () {
-      storeMode = b.dataset.mode;
-      modeBtns.forEach(function (x) { x.classList.toggle('active', x === b); });
-    });
-  });
-
-  function storeCmd(seq, cue) {
-    return 'Store Sequence ' + seq + ' Cue ' + cue + ' /' + storeMode;
-  }
-  document.getElementById('store-cue').addEventListener('click', function () {
-    cmd(storeCmd(selectedSeq, cueVal()));
-  });
-  document.getElementById('update-btn').addEventListener('click', function () {
-    doUpdate();
-  });
-  buildOverview();
 
   /* ================= Fixtures ================= */
   var selMode = 'fixture';
@@ -495,8 +412,7 @@
         b.addEventListener(t, function () { b.classList.remove('pressed'); }, { passive: true });
       });
       b.addEventListener('click', function () {
-        if (def.cmd === 'Update' && window.ma3Update) window.ma3Update();
-        else cmd(def.cmd);
+        cmd(def.cmd);
       });
       barEl.appendChild(b);
     });

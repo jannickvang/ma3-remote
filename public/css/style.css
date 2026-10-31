@@ -196,16 +196,6 @@ input:focus { border-color: var(--accent); }
 .shaper-blade .pair { flex: 1; min-height: 0; display: flex; gap: 8px; }
 .shaper-blade .wheel { flex: 1; }
 
-/* ---------- Cues ---------- */
-.cues-layout { flex: 1; min-height: 0; display: flex; gap: 10px; }
-.cues-layout .panel { flex: 1; }
-.seq-overview {
-  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; align-content: start;
-}
-.seq-chip { min-height: 56px; padding: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
-.seq-chip.selected { border-color: var(--accent); color: var(--accent); background: #2a2113; }
-
 /* ---------- Fixtures ---------- */
 .fix-layout { flex: 1; min-height: 0; display: flex; gap: 10px; }
 .fix-layout > .panel:first-child { width: 340px; flex: 0 0 340px; }
@@ -263,7 +253,7 @@ dialog .row input[type="text"] { flex: 1; width: auto; min-width: 100px; }
   .enc-middle { order: -1; flex: 1 1 100%; }
   .enc-side { flex: 1 1 calc(50% - 5px); }
   .shaper-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
-  .cues-layout, .fix-layout { flex-direction: column; }
+  .fix-layout { flex-direction: column; }
   .fix-layout > .panel:first-child { width: auto; flex: 0 0 auto; }
   .nav-btn { font-size: 14px; padding: 0 6px; }
   .conn-text, #conn-text { display: none; }

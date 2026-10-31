@@ -1,6 +1,6 @@
 # MA3 Remote PWA
 
-Touch remote (PWA) for a grandMA3 console, optimized for iPad. Encoders, shapers, cues & sequences and fixture/group selection. Commands are sent as OSC (`/cmd`) over UDP to the MA3.
+Touch remote (PWA) for a grandMA3 console, optimized for iPad. Encoders, shapers and fixture/group selection. Commands are sent as OSC (`/cmd`) over UDP to the MA3.
 
 ## Download and run
 

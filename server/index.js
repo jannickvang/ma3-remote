@@ -116,7 +116,7 @@ function safeClientSettings(settings) {
         custom: v.custom === true
       }));
   }
-  if (typeof settings.page === 'string' && ['encoders', 'shapers', 'cues', 'fixtures'].includes(settings.page)) {
+  if (typeof settings.page === 'string' && ['encoders', 'shapers', 'fixtures'].includes(settings.page)) {
     result.page = settings.page;
   }
   if (validTarget(settings.ip, settings.port)) {
