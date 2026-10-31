@@ -31,7 +31,13 @@
     <section class="page active" id="page-encoders">
       <div class="enc-layout">
         <div class="enc-side" id="wheel-pan"></div>
-        <div class="enc-middle" id="wheels-middle"></div>
+        <div class="enc-middle" id="wheels-middle">
+          <div class="frost-presets" id="frost-presets">
+            <div class="wheel-label">Frost</div>
+            <div class="frost-buttons"></div>
+            <button class="frost-settings" id="frost-settings" type="button" aria-label="Configure frost presets">⚙</button>
+          </div>
+        </div>
         <div class="enc-side" id="wheel-tilt"></div>
       </div>
     </section>
@@ -109,6 +115,17 @@
     <div class="row end">
       <button class="btn" id="config-reset">Default</button>
       <button class="btn accent" id="config-close">Done</button>
+    </div>
+  </dialog>
+
+  <dialog id="frost-dialog">
+    <h2>Frost presets</h2>
+    <p class="hint">Set the MA3 preset number for each frost button.</p>
+    <div class="frost-config" id="frost-config"></div>
+    <p id="frost-error" class="error"></p>
+    <div class="row end">
+      <button class="btn" id="frost-cancel">Cancel</button>
+      <button class="btn accent" id="frost-save">Save</button>
     </div>
   </dialog>
 

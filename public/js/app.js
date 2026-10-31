@@ -115,8 +115,77 @@
   new Wheel(document.getElementById('wheel-pan'), { attr: 'Pan', label: 'Pan', pxPerStep: 6, stepSize: 0.05 });
   new Wheel(document.getElementById('wheel-tilt'), { attr: 'Tilt', label: 'Tilt', pxPerStep: 6, stepSize: 0.05 });
   var mid = document.getElementById('wheels-middle');
+  var frostPanel = document.getElementById('frost-presets');
+  mid.removeChild(frostPanel);
   new Wheel(mid, { attr: 'Zoom', label: 'Zoom', pxPerStep: 7, stepSize: 1 });
+  mid.appendChild(frostPanel);
   new Wheel(mid, { attr: 'Focus', label: 'Focus', pxPerStep: 7, stepSize: 1 });
+
+  var FROST_KEY = 'ma3.frostPresets.v1';
+  var FROST_LABELS = ['No Frost', 'Light Frost', 'Medium Frost', 'Combined Frost'];
+  var frostPresets = ['5.1', '5.2', '5.3', '5.4'];
+  var frostButtons = document.querySelector('#frost-presets .frost-buttons');
+  var frostDialog = document.getElementById('frost-dialog');
+  var frostConfig = document.getElementById('frost-config');
+  var frostError = document.getElementById('frost-error');
+
+  try {
+    var savedFrost = JSON.parse(localStorage.getItem(FROST_KEY));
+    if (Array.isArray(savedFrost) && savedFrost.length === FROST_LABELS.length &&
+        savedFrost.every(function (preset) { return typeof preset === 'string' && /^\d+(?:\.\d+)?$/.test(preset); })) {
+      frostPresets = savedFrost;
+    }
+  } catch (e) {}
+
+  function renderFrostButtons() {
+    frostButtons.innerHTML = '';
+    FROST_LABELS.forEach(function (label, idx) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'frost-btn';
+      b.textContent = label;
+      b.addEventListener('click', function () { cmd('At Preset ' + frostPresets[idx]); });
+      frostButtons.appendChild(b);
+    });
+  }
+
+  function renderFrostConfig() {
+    frostConfig.innerHTML = '';
+    FROST_LABELS.forEach(function (label, idx) {
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.inputMode = 'decimal';
+      input.value = frostPresets[idx];
+      input.dataset.index = idx;
+      var field = document.createElement('label');
+      field.textContent = label;
+      field.appendChild(input);
+      frostConfig.appendChild(field);
+    });
+  }
+
+  document.getElementById('frost-settings').addEventListener('click', function () {
+    frostError.textContent = '';
+    renderFrostConfig();
+    if (frostDialog.showModal) frostDialog.showModal(); else frostDialog.setAttribute('open', '');
+  });
+  document.getElementById('frost-cancel').addEventListener('click', function () {
+    if (frostDialog.close) frostDialog.close(); else frostDialog.removeAttribute('open');
+  });
+  document.getElementById('frost-save').addEventListener('click', function () {
+    var values = Array.prototype.map.call(frostConfig.querySelectorAll('input'), function (input) {
+      return input.value.trim();
+    });
+    if (values.some(function (value) { return !/^\d+(?:\.\d+)?$/.test(value); })) {
+      frostError.textContent = 'Enter a valid MA3 preset number for every button';
+      return;
+    }
+    frostPresets = values;
+    try { localStorage.setItem(FROST_KEY, JSON.stringify(frostPresets)); } catch (e) {}
+    renderFrostButtons();
+    if (frostDialog.close) frostDialog.close(); else frostDialog.removeAttribute('open');
+  });
+  renderFrostButtons();
 
   var grid = document.getElementById('shaper-grid');
   for (var i = 1; i <= 4; i++) {

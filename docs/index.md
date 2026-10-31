@@ -59,6 +59,7 @@ The IP address defaults to `127.0.0.1`. That only works if the MA3 runs on the s
 | **Firewall** | Allow the app on private networks (TCP 3000 for the iPad, UDP for the MA3 port). |
 | **Readout** | Set to **Percent**, otherwise the steps are far too large. |
 | **Attribute names** | The app uses `Pan`, `Tilt`, `Zoom`, `Focus1`, `Blade 1A` to `Blade 4A` and `Blade1 Rot` to `Blade4 Rot`. If your fixtures use other names, adjust `MA3_ATTRIBUTE_MAP` (see below). |
+| **Frost presets** | The four frost buttons on the Encoders page recall MA3 presets 5.1 through 5.4 by default. Tap the gear below the buttons to configure the preset numbers per device. |
 | **Update** | The Update button sends `Update /NoConfirmation` followed by `ClearAll`. This way you don't have to confirm on the console and the programmer is empty afterwards. |
 | **Set** | The button sends `Set Selection Property 'Active'`. It is meant to select the whole group again after Next/Previous. |
 | **Sequences** | Cues & Seq uses start sequence 201 by default. Another value is remembered per device. |
